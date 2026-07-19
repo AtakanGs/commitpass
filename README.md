@@ -45,6 +45,15 @@ npm run dev
 
 Open `http://localhost:3000`.
 
+To verify the production export locally:
+
+```bash
+npm run build
+npm start
+```
+
+The web application is exported as static files in `out/`, which keeps hosting simple and avoids a trusted application server in the settlement path.
+
 ## Deploy to Arc Testnet
 
 1. Fund a dedicated testnet deployer with faucet USDC.

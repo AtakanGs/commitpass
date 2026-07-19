@@ -6,12 +6,12 @@
 
 ### 1. Web application
 
-A Next.js application provides two main workflows:
+A statically exported Next.js application provides two main workflows:
 
 - **Create:** the provider defines the invited customer, commitments, compensation and time windows.
 - **Manage:** either party loads a reservation and submits contract actions.
 
-The browser connects to an injected EVM wallet and requests Arc Testnet when needed. The application never receives or stores a private key.
+The browser connects to an injected EVM wallet and requests Arc Testnet when needed. The application never receives or stores a private key. Production assets are generated into `out/` and can be hosted on a static platform; settlement remains entirely in the wallet and contract.
 
 ### 2. Settlement contract
 
