@@ -31,10 +31,12 @@ export const OUTCOME_LABELS = [
 ] as const;
 
 export function getContractAddress(): Address {
-  const value = process.env.NEXT_PUBLIC_COMMITPASS_CONTRACT_ADDRESS;
-  if (!value || !isAddress(value)) {
-    throw new Error("CommitPass contract is not deployed yet. Set NEXT_PUBLIC_COMMITPASS_CONTRACT_ADDRESS.");
-  }
+  const configured = process.env.NEXT_PUBLIC_COMMITPASS_CONTRACT_ADDRESS;
+  const value =
+    configured && isAddress(configured)
+      ? configured
+      : "0x02b02Cdb93B32a9bcDC9cb5904Cef2ABb2F7De6D";
+
   return getAddress(value);
 }
 
