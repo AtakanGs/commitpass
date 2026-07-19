@@ -1,0 +1,43 @@
+{
+  "name": "commitpass",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Two-sided programmable commitment infrastructure built on Arc.",
+  "author": "Atakan Gündallı <atakan1705@hotmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint app components lib --max-warnings 0",
+    "typecheck": "tsc --noEmit",
+    "contracts:compile": "hardhat compile",
+    "contracts:test": "hardhat test",
+    "test": "npm run contracts:test",
+    "deploy:arc": "hardhat run scripts/deploy.cjs --network arcTestnet",
+    "ci": "npm run contracts:compile && npm run contracts:test && npm run typecheck && npm run build"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "5.6.1",
+    "next": "15.5.20",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "viem": "2.55.4"
+  },
+  "devDependencies": {
+    "@types/node": "24.3.0",
+    "@types/react": "19.1.12",
+    "@types/react-dom": "19.1.9",
+    "eslint": "9.35.0",
+    "eslint-config-next": "15.5.20",
+    "hardhat": "2.28.6",
+    "typescript": "5.9.2",
+    "@eslint/eslintrc": "3.3.1",
+    "@nomicfoundation/hardhat-ethers": "3.1.0",
+    "ethers": "6.15.0",
+    "chai": "4.5.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
