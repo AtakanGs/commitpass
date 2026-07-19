@@ -1,0 +1,16 @@
+﻿{
+  "network": "Arc Testnet",
+  "chainId": 5042002,
+  "contract": "0x02b02Cdb93B32a9bcDC9cb5904Cef2ABb2F7De6D",
+  "usdc": "0x3600000000000000000000000000000000000000",
+  "deployer": "0x329c253928e0727f31c7FfbdC83b143E55c36841",
+  "arbiter": "0x329c253928e0727f31c7FfbdC83b143E55c36841",
+  "verifiedFlow": {
+    "reservationId": 1,
+    "providerCommitment": "5 USDC",
+    "customerCommitment": "2 USDC",
+    "providerCompensation": "2 USDC",
+    "finalStatus": "Cancelled",
+    "finalOutcome": "RefundBoth"
+  }
+}
