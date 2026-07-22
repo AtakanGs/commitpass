@@ -48,6 +48,48 @@ export function formatUsdc(value: bigint) {
   return `${formatUnits(value, 6)} USDC`;
 }
 
+export function explainContractError(caught: unknown) {
+  const message = caught instanceof Error ? caught.message : String(caught);
+
+  if (/request limit reached|request exceeds defined limit|rate limited/i.test(message)) {
+    return "Arc Testnet RPC is temporarily rate-limited. Wait a few seconds and retry.";
+  }
+
+  if (/TooLate|0xecdd1c29/i.test(message)) {
+    return "This action is no longer available because its deadline has passed.";
+  }
+
+  if (/TooEarly/i.test(message)) {
+    return "This action is not available yet.";
+  }
+
+  if (/Unauthorized/i.test(message)) {
+    return "The connected wallet is not authorized to perform this action.";
+  }
+
+  if (/InvalidState/i.test(message)) {
+    return "This action is not available in the reservation's current state.";
+  }
+
+  if (/InvalidOutcome/i.test(message)) {
+    return "The selected outcome is not valid for this reservation.";
+  }
+
+  if (/InvalidSchedule/i.test(message)) {
+    return "The reservation schedule or deadline is invalid.";
+  }
+
+  if (/InvalidAmount/i.test(message)) {
+    return "One or more commitment amounts are invalid.";
+  }
+
+  if (/InvalidAddress/i.test(message)) {
+    return "One or more wallet addresses are invalid.";
+  }
+
+  return message;
+}
+
 export async function approveCommitment(amount: bigint): Promise<Hash> {
   const { account, walletClient, publicClient } = await connectWallet();
   const hash = await walletClient.writeContract({

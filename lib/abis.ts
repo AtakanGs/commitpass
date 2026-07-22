@@ -19,6 +19,14 @@ export const erc20Abi = [
 ] as const;
 
 export const commitmentEscrowAbi = [
+  { type: "error", name: "Unauthorized", inputs: [] },
+  { type: "error", name: "InvalidAddress", inputs: [] },
+  { type: "error", name: "InvalidAmount", inputs: [] },
+  { type: "error", name: "InvalidSchedule", inputs: [] },
+  { type: "error", name: "InvalidState", inputs: [] },
+  { type: "error", name: "TooEarly", inputs: [] },
+  { type: "error", name: "TooLate", inputs: [] },
+  { type: "error", name: "InvalidOutcome", inputs: [] },
   {
     type: "function",
     name: "createReservation",

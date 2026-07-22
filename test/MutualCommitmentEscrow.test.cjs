@@ -81,6 +81,13 @@ describe("MutualCommitmentEscrow", function () {
 
     expect(await ctx.usdc.balanceOf(ctx.provider.address)).to.equal(100_000_000n);
     expect(await ctx.usdc.balanceOf(ctx.customer.address)).to.equal(100_000_000n);
+    expect(await ctx.usdc.balanceOf(await ctx.escrow.getAddress())).to.equal(0n);
+
+    const reservation = await ctx.escrow.getReservation(1);
+    expect(reservation.status).to.equal(5n);
+    expect(reservation.finalOutcome).to.equal(1n);
+    expect(reservation.providerConfirmed).to.equal(true);
+    expect(reservation.customerConfirmed).to.equal(true);
   });
 
   it("refunds both parties on an early cancellation", async function () {

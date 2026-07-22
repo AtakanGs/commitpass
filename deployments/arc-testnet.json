@@ -5,12 +5,31 @@
   "usdc": "0x3600000000000000000000000000000000000000",
   "deployer": "0x329c253928e0727f31c7FfbdC83b143E55c36841",
   "arbiter": "0x329c253928e0727f31c7FfbdC83b143E55c36841",
-  "verifiedFlow": {
-    "reservationId": 1,
-    "providerCommitment": "5 USDC",
-    "customerCommitment": "2 USDC",
-    "providerCompensation": "2 USDC",
-    "finalStatus": "Cancelled",
-    "finalOutcome": "RefundBoth"
-  }
+  "verifiedFlows": [
+    {
+      "scenario": "Early cancellation after customer acceptance",
+      "reservationId": 1,
+      "providerCommitment": "5 USDC",
+      "customerCommitment": "2 USDC",
+      "providerCompensation": "2 USDC",
+      "finalStatus": "Cancelled",
+      "finalOutcome": "RefundBoth",
+      "verifiedAt": "2026-07-21"
+    },
+    {
+      "scenario": "Mutual attendance",
+      "reservationId": 3,
+      "providerCommitment": "5 USDC",
+      "customerCommitment": "2 USDC",
+      "providerCompensation": "2 USDC",
+      "creationTransaction": "0x6cf0876f9ea16dcf76cdf8e383b7d4949e0a0c58af719c9ab08a025e1c4fc833",
+      "acceptanceTransaction": "0x19f673a519f626301e000a816d3bcc8a381685fd0314ff145760adad4699a7f2",
+      "customerAttendanceTransaction": "0x8cdcfacfc592333e116dd62cb7d31aaaad195b5b85db038d08c08f7c72a8f339",
+      "providerAttendanceTransaction": "0x16d5c328c9216f7fc91f7759112d0a51d22f7659ff15232222c7fe88779cbeed",
+      "resolutionTransaction": "0x16d5c328c9216f7fc91f7759112d0a51d22f7659ff15232222c7fe88779cbeed",
+      "finalStatus": "Resolved",
+      "finalOutcome": "Completed",
+      "verifiedAt": "2026-07-22"
+    }
+  ]
 }

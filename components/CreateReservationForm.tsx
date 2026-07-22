@@ -2,7 +2,7 @@
 
 import { FormEvent, useMemo, useState } from "react";
 import { isAddress, type Address } from "viem";
-import { createReservation } from "@/lib/contract";
+import { createReservation, explainContractError } from "@/lib/contract";
 
 function defaultStart() {
   const date = new Date(Date.now() + 48 * 60 * 60 * 1000);
@@ -49,7 +49,7 @@ export function CreateReservationForm() {
       });
       setStatus(`Reservation created. Transaction: ${hash}`);
     } catch (caught) {
-      setStatus(caught instanceof Error ? caught.message : "Transaction failed.");
+      setStatus(explainContractError(caught));
     } finally {
       setBusy(false);
     }

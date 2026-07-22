@@ -3,6 +3,7 @@
 import { useState } from "react";
 import {
   acceptReservation,
+  explainContractError,
   formatUsdc,
   openNoShowClaim,
   OUTCOME_LABELS,
@@ -25,7 +26,7 @@ export function ManageReservation() {
       setMessage(`${label} completed.`);
       await load();
     } catch (caught) {
-      setMessage(caught instanceof Error ? caught.message : `${label} failed.`);
+      setMessage(explainContractError(caught));
     } finally {
       setBusy(false);
     }
@@ -40,13 +41,21 @@ export function ManageReservation() {
       setMessage(undefined);
     } catch (caught) {
       setReservation(undefined);
-      setMessage(caught instanceof Error ? caught.message : "Could not load reservation.");
+      setMessage(explainContractError(caught));
     } finally {
       setBusy(false);
     }
   }
 
   const reservationId = BigInt(id || "0");
+  const status = reservation?.status;
+  const canAccept = status === 1;
+  const canConfirmAttendance = status === 2;
+  const canCancelEarly = status === 1 || status === 2;
+  const canExpireInvitation = status === 1;
+  const canOpenNoShowClaim = status === 2;
+  const canDisputeClaim = status === 3;
+  const canFinalizeClaim = status === 3;
 
   return (
     <div className="formCard card">
@@ -70,6 +79,8 @@ export function ManageReservation() {
             <div><dt>Customer commitment</dt><dd>{formatUsdc(reservation.customerCommitment)}</dd></div>
             <div><dt>Provider compensation</dt><dd>{formatUsdc(reservation.providerCompensation)}</dd></div>
             <div><dt>Start</dt><dd>{new Date(Number(reservation.startTime) * 1000).toLocaleString()}</dd></div>
+            <div><dt>Provider attendance</dt><dd>{reservation.providerConfirmed ? "Confirmed" : "Pending"}</dd></div>
+            <div><dt>Customer attendance</dt><dd>{reservation.customerConfirmed ? "Confirmed" : "Pending"}</dd></div>
           </dl>
           <div className="checkinCode">
             <span>Check-in reference</span>
@@ -80,14 +91,14 @@ export function ManageReservation() {
       ) : null}
 
       <div className="actionGrid">
-        <button onClick={() => run("Accepting reservation", () => acceptReservation(reservationId))} disabled={busy}>Accept</button>
-        <button onClick={() => run("Confirming attendance", () => writeSimple("confirmAttendance", [reservationId]))} disabled={busy}>Confirm attendance</button>
-        <button onClick={() => run("Cancelling reservation", () => writeSimple("cancelReservation", [reservationId]))} disabled={busy}>Cancel early</button>
-        <button onClick={() => run("Expiring invitation", () => writeSimple("expireUnacceptedReservation", [reservationId]))} disabled={busy}>Expire invitation</button>
-        <button onClick={() => run("Opening customer no-show claim", () => openNoShowClaim(reservationId, 2))} disabled={busy}>Customer no-show</button>
-        <button onClick={() => run("Opening provider no-show claim", () => openNoShowClaim(reservationId, 3))} disabled={busy}>Provider no-show</button>
-        <button onClick={() => run("Disputing claim", () => writeSimple("disputeClaim", [reservationId]))} disabled={busy}>Dispute claim</button>
-        <button onClick={() => run("Finalizing claim", () => writeSimple("finalizeUndisputedClaim", [reservationId]))} disabled={busy}>Finalize claim</button>
+        <button onClick={() => run("Accepting reservation", () => acceptReservation(reservationId))} disabled={busy || !canAccept}>Accept</button>
+        <button onClick={() => run("Confirming attendance", () => writeSimple("confirmAttendance", [reservationId]))} disabled={busy || !canConfirmAttendance}>Confirm attendance</button>
+        <button onClick={() => run("Cancelling reservation", () => writeSimple("cancelReservation", [reservationId]))} disabled={busy || !canCancelEarly}>Cancel early</button>
+        <button onClick={() => run("Expiring invitation", () => writeSimple("expireUnacceptedReservation", [reservationId]))} disabled={busy || !canExpireInvitation}>Expire invitation</button>
+        <button onClick={() => run("Opening customer no-show claim", () => openNoShowClaim(reservationId, 2))} disabled={busy || !canOpenNoShowClaim}>Customer no-show</button>
+        <button onClick={() => run("Opening provider no-show claim", () => openNoShowClaim(reservationId, 3))} disabled={busy || !canOpenNoShowClaim}>Provider no-show</button>
+        <button onClick={() => run("Disputing claim", () => writeSimple("disputeClaim", [reservationId]))} disabled={busy || !canDisputeClaim}>Dispute claim</button>
+        <button onClick={() => run("Finalizing claim", () => writeSimple("finalizeUndisputedClaim", [reservationId]))} disabled={busy || !canFinalizeClaim}>Finalize claim</button>
       </div>
       {message ? <div className="transactionStatus">{message}</div> : null}
     </div>
