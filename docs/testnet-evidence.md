@@ -16,10 +16,10 @@ Reservation `#1` completed the following flow:
 
 ```text
 Provider creates reservation
-? Customer accepts
-? Both USDC commitments are locked
-? Reservation is cancelled within the free-cancellation window
-? Both commitments are refunded
+-> Customer accepts
+-> Both USDC commitments are locked
+-> Reservation is cancelled within the free-cancellation window
+-> Both commitments are refunded
 ```
 
 Final state:
@@ -35,11 +35,11 @@ Reservation `#3` completed the following flow:
 
 ```text
 Provider creates reservation
-? Customer accepts
-? Customer confirms attendance
-? Provider confirms attendance
-? Contract settles automatically
-? Both commitments are refunded
+-> Customer accepts
+-> Customer confirms attendance
+-> Provider confirms attendance
+-> Contract settles automatically
+-> Both commitments are refunded
 ```
 
 ### Onchain transactions
