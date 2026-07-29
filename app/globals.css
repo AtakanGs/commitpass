@@ -88,6 +88,14 @@ dl dd { margin:0; font-weight:700; }
 .actionGrid { display:grid; grid-template-columns:repeat(2,1fr); gap:9px; }
 .actionGrid button { min-height:43px; border-radius:11px; border:1px solid var(--line); background:white; color:var(--ink); font-weight:700; }
 .actionGrid button:hover { border-color:var(--blue); color:var(--blue); }
+.roleBanner { display:grid; gap:7px; margin:18px 0 4px; padding:16px; border:1px solid var(--line); border-radius:14px; background:linear-gradient(135deg,rgba(22,105,237,.06),rgba(109,77,242,.06)); }
+.roleBannerTop { display:flex; justify-content:space-between; align-items:center; gap:16px; }
+.roleBannerTop span { color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.08em; font-weight:800; }
+.roleBannerTop strong { color:var(--blue); }
+.roleBanner p { margin:0; color:var(--muted); font-size:13px; line-height:1.5; }
+.roleBanner small { color:var(--ink); font-weight:700; }
+.actionGrid:empty { display:none; }
+.actionHint { margin-top:14px; padding:13px 15px; border:1px solid var(--line); border-radius:12px; background:var(--soft); color:var(--muted); font-size:13px; line-height:1.5; }
 .footer { display:flex; justify-content:space-between; gap:30px; align-items:center; border-top:1px solid var(--line); padding-block:42px; color:var(--muted); }
 .footer strong { color:var(--ink); }
 .footer p { margin:6px 0 0; }
