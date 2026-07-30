@@ -62,4 +62,40 @@ Provider creates reservation
 
 The `Completed` outcome is only reached after both parties confirm attendance. Settlement then returns both commitments automatically.
 
-Verified on 22 July 2026.
+## Verified flow 3: Undisputed customer no-show claim
+
+Reservation `#5` completed the following optimistic claim flow:
+
+```text
+Provider creates reservation
+-> Customer accepts
+-> Both USDC commitments are locked
+-> The check-in window closes without customer attendance confirmation
+-> Provider opens a customer no-show claim
+-> Customer does not dispute within the 12-hour dispute window
+-> Provider finalizes the undisputed claim
+-> Provider receives the 5 USDC provider commitment plus the 2 USDC customer commitment
+```
+
+### Onchain transactions
+
+- Reservation created: https://testnet.arcscan.app/tx/0x1f638b10757e0f36e991deef6719e592b7c500e8eb8c805d0d8433f0976262bc
+- Customer accepted: https://testnet.arcscan.app/tx/0x69e40f52074e6314688604774d891ff545aa531eda7514af7ab62cbb2438abc7
+- Customer no-show claim opened: https://testnet.arcscan.app/tx/0xcbab93c5a4b30b090d126436e029fb29d6fc5d0772c3b86084bcdd3cedf6360d
+- Undisputed claim finalized: https://testnet.arcscan.app/tx/0x110f399d820e5d672de9a4d28702cae2974c01266382d9b51ab855d74043a882
+
+### Final state
+
+- Status: `Resolved`
+- Outcome: `CustomerNoShow`
+- Provider commitment: `5 USDC`
+- Customer commitment: `2 USDC`
+- Provider settlement: `7 USDC`
+- Provider attendance: `Pending`
+- Customer attendance: `Pending`
+- Dispute deadline: `30 July 2026, 23:56:39 Europe/Istanbul`
+- Check-in reference: `CP-000005`
+
+This flow demonstrates CommitPass's optimistic dispute mechanism. A no-show claim can be challenged by the accused party during the dispute window. Because Reservation `#5` was not disputed, the pending customer no-show outcome became final after the deadline.
+
+Evidence last updated on 31 July 2026.

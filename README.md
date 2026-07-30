@@ -7,7 +7,7 @@
 - Web app: https://commitpass.vercel.app/
 - Network: Arc Testnet
 - Contract: `0x02b02Cdb93B32a9bcDC9cb5904Cef2ABb2F7De6D`
-- Verified onchain flows: Reservation `#1` - early cancellation and mutual refund; Reservation `#3` - mutual attendance and automatic refunds
+- Verified onchain flows: Reservation `#1` - early cancellation and mutual refund; Reservation `#3` - mutual attendance and automatic refunds; Reservation `#5` - undisputed customer no-show claim and provider compensation
 - Testnet evidence: [docs/testnet-evidence.md](docs/testnet-evidence.md)
 
 CommitPass is a two-sided programmable commitment protocol for reservations and limited-capacity services. Customers and providers lock small refundable USDC commitments on Arc. When both honour the reservation, both commitments return. If one side no-shows, the other receives pre-agreed compensation.
@@ -25,7 +25,7 @@ Built by **Atakan Gündallı** for the Programmable Money Hackathon.
 - Dispute window and arbiter resolution
 - Duplicate-settlement protection
 - Arc Testnet wallet connection
-- Onchain reservation console
+- Role-aware onchain reservation console
 
 ## Why Arc
 
