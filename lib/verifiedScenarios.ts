@@ -26,7 +26,7 @@ export const VERIFIED_SCENARIOS: VerifiedScenario[] = [
     outcome: "Refund both",
     summary:
       "The customer accepted, both commitments were locked and the reservation was cancelled inside the free-cancellation window.",
-    settlement: "Provider 5 USDC ? Customer 2 USDC",
+    settlement: "Provider 5 USDC | Customer 2 USDC",
     verifiedAt: "21 July 2026",
     activities: [
       {
@@ -54,7 +54,7 @@ export const VERIFIED_SCENARIOS: VerifiedScenario[] = [
     outcome: "Completed",
     summary:
       "Separate provider and customer wallets confirmed attendance during the check-in window and the contract settled automatically.",
-    settlement: "Provider 5 USDC ? Customer 2 USDC returned",
+    settlement: "Provider 5 USDC | Customer 2 USDC returned",
     verifiedAt: "22 July 2026",
     finalTransaction:
       "0x16d5c328c9216f7fc91f7759112d0a51d22f7659ff15232222c7fe88779cbeed",
@@ -97,7 +97,7 @@ export const VERIFIED_SCENARIOS: VerifiedScenario[] = [
     outcome: "Customer no-show",
     summary:
       "The provider opened a customer no-show claim. It was not disputed during the 12-hour window and became final.",
-    settlement: "Provider 7 USDC ? Customer 0 USDC",
+    settlement: "Provider 7 USDC | Customer 0 USDC",
     verifiedAt: "31 July 2026",
     finalTransaction:
       "0x110f399d820e5d672de9a4d28702cae2974c01266382d9b51ab855d74043a882",
