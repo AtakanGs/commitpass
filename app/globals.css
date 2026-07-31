@@ -426,3 +426,295 @@ dl dd { margin:0; font-weight:700; }
     padding: 22px;
   }
 }
+
+
+.proofSection {
+  padding-top: 110px;
+  padding-bottom: 110px;
+}
+
+.proofSectionHead {
+  display: grid;
+  grid-template-columns: 1.15fr .85fr;
+  gap: 70px;
+  align-items: end;
+}
+
+.proofSectionHead > p {
+  max-width: 540px;
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+.verifiedGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-top: 42px;
+}
+
+.verifiedCard {
+  display: flex;
+  min-height: 470px;
+  flex-direction: column;
+  padding: 24px;
+}
+
+.verifiedTopline,
+.verifiedMeta,
+.verifiedActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.verifiedTopline > span:first-child {
+  color: var(--blue);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .09em;
+}
+
+.verifiedBadge {
+  padding: 6px 9px;
+  border: 1px solid rgba(8,127,101,.18);
+  border-radius: 999px;
+  background: rgba(8,127,101,.08);
+  color: #087f65;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.verifiedIdentity {
+  margin-top: 35px;
+}
+
+.verifiedIdentity > span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.verifiedIdentity h3 {
+  margin: 8px 0 0;
+  font-size: 27px;
+  line-height: 1.12;
+}
+
+.verifiedState {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+  margin-top: 22px;
+}
+
+.verifiedState > div {
+  display: grid;
+  gap: 5px;
+  padding: 13px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: var(--soft);
+}
+
+.verifiedState span,
+.verifiedSettlement span {
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.verifiedState strong {
+  font-size: 12px;
+}
+
+.verifiedSummary {
+  margin: 22px 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.verifiedSettlement {
+  display: grid;
+  gap: 7px;
+  padding: 15px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.verifiedSettlement strong {
+  font-size: 13px;
+}
+
+.verifiedMeta {
+  margin-top: auto;
+  padding-top: 22px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.verifiedActions {
+  margin-top: 18px;
+}
+
+.verifiedActions .button {
+  min-height: 40px;
+  padding: 0 14px;
+  font-size: 11px;
+}
+
+.textLink {
+  color: var(--blue);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.activityPanel {
+  margin: 22px 0;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: white;
+}
+
+.activityHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  padding-bottom: 17px;
+  border-bottom: 1px solid var(--line);
+}
+
+.activityHeader > div {
+  display: grid;
+  gap: 5px;
+}
+
+.activityHeader span {
+  color: var(--blue);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+
+.activityHeader strong {
+  font-size: 14px;
+}
+
+.activityHeader small {
+  color: var(--muted);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.activityList {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.activityItem {
+  position: relative;
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 13px;
+  padding: 18px 0;
+}
+
+.activityItem:not(:last-child)::after {
+  position: absolute;
+  top: 48px;
+  bottom: -1px;
+  left: 16px;
+  width: 1px;
+  background: var(--line);
+  content: "";
+}
+
+.activityMarker {
+  z-index: 1;
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid rgba(22,105,237,.2);
+  border-radius: 50%;
+  background: #f3f7ff;
+  color: var(--blue);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.activityCopy {
+  padding-top: 2px;
+}
+
+.activityCopy strong {
+  display: block;
+  font-size: 13px;
+}
+
+.activityCopy p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.activityCopy a {
+  display: inline-block;
+  margin-top: 7px;
+  color: var(--blue);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.activityNote {
+  margin: 3px 0 0;
+  padding-top: 15px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+@media (max-width: 980px) {
+  .verifiedGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .verifiedCard {
+    min-height: auto;
+  }
+
+  .proofSectionHead {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}
+
+@media (max-width: 600px) {
+  .proofSection {
+    padding-top: 75px;
+    padding-bottom: 75px;
+  }
+
+  .verifiedState {
+    grid-template-columns: 1fr;
+  }
+
+  .verifiedActions,
+  .activityHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

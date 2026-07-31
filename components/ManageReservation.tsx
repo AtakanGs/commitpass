@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { keccak256, stringToHex, type Address } from "viem";
+import { ReservationActivity } from "@/components/ReservationActivity";
 import { SettlementPreview } from "@/components/SettlementPreview";
 import {
   acceptReservation,
@@ -459,6 +460,30 @@ export function ManageReservation({
               }
               providerCompensation={
                 reservation.providerCompensation
+              }
+            />
+
+            <ReservationActivity
+              reservationId={id}
+              status={STATUS_LABELS[reservation.status]}
+              outcome={
+                OUTCOME_LABELS[
+                  reservation.finalOutcome
+                ]
+              }
+              providerConfirmed={
+                reservation.providerConfirmed
+              }
+              customerConfirmed={
+                reservation.customerConfirmed
+              }
+              claimOpened={
+                Number(reservation.claimOpenedAt) > 0
+              }
+              pendingOutcome={
+                OUTCOME_LABELS[
+                  reservation.pendingOutcome
+                ]
               }
             />
 

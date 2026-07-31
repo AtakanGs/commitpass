@@ -2,6 +2,7 @@ import Image from "next/image";
 import { CreateReservationForm } from "@/components/CreateReservationForm";
 import { ManageReservation } from "@/components/ManageReservation";
 import { WalletStatus } from "@/components/WalletStatus";
+import { VerifiedScenarios } from "@/components/VerifiedScenarios";
 
 const outcomes = [
   ["Both attend", "Both commitments return automatically."],
@@ -67,6 +68,8 @@ export default function Home() {
           ))}
         </div>
       </section>
+
+      <VerifiedScenarios />
 
       <section className="shell workbench" id="create">
         <div className="workbenchIntro">
