@@ -98,6 +98,7 @@ export default function Home() {
           <p>Built by Atakan Gündallı for the Programmable Money Hackathon.</p>
         </div>
         <div className="footerLinks">
+          <a href="/reservation">Open reservation</a>
           <a href="https://github.com/AtakanGs" target="_blank" rel="noreferrer">GitHub</a>
           <a href="https://testnet.arcscan.app" target="_blank" rel="noreferrer">Arcscan</a>
         </div>

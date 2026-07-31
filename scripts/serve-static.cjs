@@ -33,8 +33,16 @@ const server = http.createServer((request, response) => {
     return;
   }
 
-  if (filePath.endsWith(path.sep)) filePath = path.join(filePath, "index.html");
-  if (!path.extname(filePath)) filePath = path.join(filePath, "index.html");
+  if (filePath.endsWith(path.sep)) {
+    filePath = path.join(filePath, "index.html");
+  } else if (!path.extname(filePath)) {
+    const htmlPath = filePath + ".html";
+    const indexPath = path.join(filePath, "index.html");
+
+    filePath = fs.existsSync(htmlPath)
+      ? htmlPath
+      : indexPath;
+  }
 
   fs.stat(filePath, (statError, stats) => {
     const resolvedPath = !statError && stats.isFile() ? filePath : path.join(root, "404.html");

@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { type Address } from "viem";
+import { keccak256, stringToHex, type Address } from "viem";
+import { SettlementPreview } from "@/components/SettlementPreview";
 import {
   acceptReservation,
   explainContractError,
@@ -33,13 +34,24 @@ function formatDate(timestamp: number) {
   return new Date(timestamp * 1000).toLocaleString();
 }
 
-export function ManageReservation() {
-  const [id, setId] = useState("1");
+type ManageReservationProps = {
+  initialId?: string;
+  autoLoad?: boolean;
+  reservationTitle?: string;
+};
+
+export function ManageReservation({
+  initialId = "1",
+  autoLoad = false,
+  reservationTitle,
+}: ManageReservationProps) {
+  const [id, setId] = useState(initialId);
   const [reservation, setReservation] =
     useState<Awaited<ReturnType<typeof readReservation>>>();
   const [account, setAccount] = useState<Address>();
   const [message, setMessage] = useState<string>();
   const [busy, setBusy] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [now, setNow] = useState(0);
 
   useEffect(() => {
@@ -72,6 +84,15 @@ export function ManageReservation() {
     };
   }, []);
 
+  useEffect(() => {
+    if (autoLoad && initialId) {
+      void load(initialId);
+    }
+
+    // Auto-load is intentionally tied to shared URL parameters.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoLoad, initialId]);
+
   async function run(
     label: string,
     action: () => Promise<unknown>,
@@ -90,12 +111,13 @@ export function ManageReservation() {
     }
   }
 
-  async function load() {
+  async function load(targetId = id) {
     setBusy(true);
     setMessage("Loading reservation...");
+    setId(targetId);
 
     try {
-      const value = await readReservation(BigInt(id));
+      const value = await readReservation(BigInt(targetId));
       const connectedAccount = await getConnectedAccount();
 
       setReservation(value);
@@ -112,6 +134,12 @@ export function ManageReservation() {
 
   const reservationId = BigInt(id || "0");
   const status = reservation?.status;
+  const metadataVerified = Boolean(
+    reservation &&
+      reservationTitle &&
+      keccak256(stringToHex(reservationTitle)) ===
+        reservation.metadataHash,
+  );
   const nowSeconds = Math.floor(now / 1000);
 
   const isProvider = sameAddress(
@@ -230,33 +258,85 @@ export function ManageReservation() {
       "This reservation was cancelled and its applicable commitments were refunded.";
   }
 
+  function getSharePath() {
+    const params = new URLSearchParams({ id });
+
+    if (reservationTitle) {
+      params.set("title", reservationTitle);
+    }
+
+    return "/reservation?" + params.toString();
+  }
+
+  async function copyShareLink() {
+    try {
+      await navigator.clipboard.writeText(
+        window.location.origin + getSharePath(),
+      );
+
+      setCopied(true);
+
+      window.setTimeout(() => {
+        setCopied(false);
+      }, 1800);
+    } catch {
+      setMessage(
+        "The reservation link could not be copied automatically.",
+      );
+    }
+  }
+
   return (
     <div className="formCard card">
       <div className="formHeader">
-        <span>Reservation console</span>
+        <span>
+          {autoLoad
+            ? "Reservation details"
+            : "Reservation console"}
+        </span>
         <span className="secureTag">Onchain</span>
       </div>
 
-      <div className="lookupRow">
-        <input
-          value={id}
-          onChange={(event) =>
-            setId(event.target.value.replace(/\D/g, ""))
-          }
-          aria-label="Reservation ID"
-        />
-        <button
-          className="button secondary"
-          type="button"
-          onClick={load}
-          disabled={busy || !id}
-        >
-          Load
-        </button>
-      </div>
+      {!autoLoad ? (
+        <div className="lookupRow">
+          <input
+            value={id}
+            onChange={(event) =>
+              setId(event.target.value.replace(/\D/g, ""))
+            }
+            aria-label="Reservation ID"
+          />
+          <button
+            className="button secondary"
+            type="button"
+            onClick={() => void load()}
+            disabled={busy || !id}
+          >
+            Load
+          </button>
+        </div>
+      ) : null}
 
       {reservation ? (
         <>
+          {reservationTitle ? (
+            <div className="reservationTitle">
+              <span>Shared session</span>
+              <h3>{reservationTitle}</h3>
+              <small
+                className={
+                  metadataVerified
+                    ? "metadataVerified"
+                    : "metadataUnverified"
+                }
+              >
+                {metadataVerified
+                  ? "Verified against the onchain metadata hash"
+                  : "Shared label does not match the onchain metadata hash"}
+              </small>
+            </div>
+          ) : null}
+
           <div className="roleBanner">
             <div className="roleBannerTop">
               <span>Connected role</span>
@@ -369,6 +449,37 @@ export function ManageReservation() {
                 </div>
               ) : null}
             </dl>
+
+            <SettlementPreview
+              providerCommitment={
+                reservation.providerCommitment
+              }
+              customerCommitment={
+                reservation.customerCommitment
+              }
+              providerCompensation={
+                reservation.providerCompensation
+              }
+            />
+
+            <div className="shareActions">
+              {!autoLoad ? (
+                <a
+                  className="button secondary"
+                  href={getSharePath()}
+                >
+                  Open share page
+                </a>
+              ) : null}
+
+              <button
+                className="button secondary"
+                type="button"
+                onClick={copyShareLink}
+              >
+                {copied ? "Link copied" : "Copy link"}
+              </button>
+            </div>
 
             <div className="checkinCode">
               <span>Check-in reference</span>

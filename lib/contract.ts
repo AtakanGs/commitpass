@@ -1,16 +1,24 @@
 import {
+  createPublicClient,
   formatUnits,
   getAddress,
+  http,
   isAddress,
   keccak256,
+  parseEventLogs,
   parseUnits,
   stringToHex,
   type Address,
   type Hash,
 } from "viem";
 import { commitmentEscrowAbi, erc20Abi } from "@/lib/abis";
-import { ARC_USDC_ADDRESS } from "@/lib/arc";
+import { arcTestnet, ARC_TESTNET_RPC, ARC_USDC_ADDRESS } from "@/lib/arc";
 import { connectWallet } from "@/lib/wallet";
+
+const arcPublicClient = createPublicClient({
+  chain: arcTestnet,
+  transport: http(ARC_TESTNET_RPC),
+});
 
 export const STATUS_LABELS = [
   "None",
@@ -139,13 +147,30 @@ export async function createReservation(input: {
     ],
   });
   const hash = await walletClient.writeContract(request);
-  await publicClient.waitForTransactionReceipt({ hash });
-  return hash;
+  const receipt = await publicClient.waitForTransactionReceipt({
+    hash,
+  });
+
+  const [createdLog] = parseEventLogs({
+    abi: commitmentEscrowAbi,
+    logs: receipt.logs,
+    eventName: "ReservationCreated",
+  });
+
+  if (!createdLog) {
+    throw new Error(
+      "The reservation transaction succeeded, but its creation event could not be read.",
+    );
+  }
+
+  return {
+    hash,
+    reservationId: createdLog.args.reservationId,
+  };
 }
 
 export async function readReservation(id: bigint) {
-  const { publicClient } = await connectWallet();
-  return publicClient.readContract({
+  return arcPublicClient.readContract({
     address: getContractAddress(),
     abi: commitmentEscrowAbi,
     functionName: "getReservation",

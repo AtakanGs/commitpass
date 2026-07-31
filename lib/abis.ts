@@ -28,6 +28,42 @@ export const commitmentEscrowAbi = [
   { type: "error", name: "TooLate", inputs: [] },
   { type: "error", name: "InvalidOutcome", inputs: [] },
   {
+    type: "event",
+    name: "ReservationCreated",
+    inputs: [
+      {
+        name: "reservationId",
+        type: "uint256",
+        indexed: true,
+      },
+      {
+        name: "provider",
+        type: "address",
+        indexed: true,
+      },
+      {
+        name: "customer",
+        type: "address",
+        indexed: true,
+      },
+      {
+        name: "providerCommitment",
+        type: "uint256",
+        indexed: false,
+      },
+      {
+        name: "customerCommitment",
+        type: "uint256",
+        indexed: false,
+      },
+      {
+        name: "metadataHash",
+        type: "bytes32",
+        indexed: false,
+      },
+    ],
+  },
+  {
     type: "function",
     name: "createReservation",
     stateMutability: "nonpayable",

@@ -120,3 +120,309 @@ dl dd { margin:0; font-weight:700; }
   .formCard { padding:20px; border-radius:20px; }
   .footer { align-items:flex-start; flex-direction:column; }
 }
+
+
+.settlementPreview {
+  margin: 22px 0;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--soft);
+}
+
+.settlementHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 14px;
+}
+
+.settlementHeader div {
+  display: grid;
+  gap: 5px;
+}
+
+.settlementHeader span,
+.reservationTitle > span,
+.createdReservation > div:first-child > span {
+  color: var(--blue);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+
+.settlementHeader strong {
+  font-size: 14px;
+}
+
+.settlementHeader small {
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.settlementGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 9px;
+}
+
+.settlementCard {
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: white;
+}
+
+.settlementCard h4 {
+  margin: 0 0 6px;
+  font: 700 14px "Manrope", sans-serif;
+}
+
+.settlementCard p {
+  min-height: 48px;
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.settlementCard > div {
+  display: grid;
+  gap: 3px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.settlementCard > div + div {
+  margin-top: 8px;
+}
+
+.settlementCard div span {
+  color: var(--muted);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.settlementCard div strong {
+  font-size: 12px;
+}
+
+.settlementFootnote {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.createdReservation {
+  display: grid;
+  gap: 16px;
+  margin-top: 18px;
+  padding: 20px;
+  border: 1px solid rgba(22,105,237,.22);
+  border-radius: 18px;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(22,105,237,.08),
+      rgba(109,77,242,.07)
+    );
+}
+
+.createdReservation strong {
+  display: block;
+  margin-top: 5px;
+  font: 800 23px "Manrope", sans-serif;
+}
+
+.createdReservation p {
+  margin: 7px 0 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.createdActions,
+.shareActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.createdActions .button,
+.shareActions .button {
+  min-height: 42px;
+}
+
+.transactionLink {
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.reservationTitle {
+  display: grid;
+  gap: 7px;
+  margin: 18px 0;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: white;
+}
+
+.reservationTitle h3 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.metadataVerified,
+.metadataUnverified {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.metadataVerified {
+  color: #087f65;
+}
+
+.metadataUnverified {
+  color: #b54728;
+}
+
+.shareActions {
+  margin-bottom: 14px;
+}
+
+.sharedPage {
+  min-height: 100vh;
+}
+
+.sharedHero {
+  max-width: 920px;
+  padding-top: 70px;
+  padding-bottom: 55px;
+}
+
+.sharedHero h1 {
+  font-size: clamp(46px, 7vw, 78px);
+}
+
+.sharedHero > p:last-child {
+  max-width: 690px;
+  margin: 24px 0 0;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1.7;
+}
+
+.backLink {
+  display: inline-block;
+  margin-bottom: 34px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.backLink::before {
+  content: "?";
+  margin-right: 8px;
+}
+
+.sharedLayout {
+  display: grid;
+  grid-template-columns: .72fr 1.28fr;
+  gap: 28px;
+  align-items: start;
+  padding-bottom: 110px;
+}
+
+.sharedTrustPanel {
+  position: sticky;
+  top: 24px;
+  padding: 30px;
+}
+
+.sharedTrustPanel h2 {
+  margin-bottom: 30px;
+  font-size: 34px;
+}
+
+.trustPoint {
+  display: grid;
+  grid-template-columns: 38px 1fr;
+  gap: 14px;
+  padding: 18px 0;
+  border-top: 1px solid var(--line);
+}
+
+.trustPoint > span {
+  color: var(--teal);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.trustPoint strong {
+  font-family: "Manrope", sans-serif;
+}
+
+.trustPoint p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.sharedLoading {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+@media (max-width: 900px) {
+  .settlementGrid,
+  .sharedLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .sharedTrustPanel {
+    position: static;
+  }
+}
+
+@media (max-width: 600px) {
+  .settlementHeader {
+    flex-direction: column;
+  }
+
+  .settlementGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .settlementCard p {
+    min-height: auto;
+  }
+
+  .createdActions,
+  .shareActions {
+    flex-direction: column;
+  }
+
+  .createdActions .button,
+  .shareActions .button {
+    width: 100%;
+  }
+
+  .sharedHero {
+    padding-top: 40px;
+  }
+
+  .sharedTrustPanel {
+    padding: 22px;
+  }
+}
