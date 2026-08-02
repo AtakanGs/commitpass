@@ -45,6 +45,39 @@ Provider creates and funds the reservation
 
 The complete lifecycle was independently checked against the v2 contract state, CommitPass events and USDC `Transfer` logs.
 
+## Verified v2 flow 2: Mutual attendance
+
+Reservation `#2` completed the following hardened v2 flow:
+
+```text
+Provider creates and funds the reservation
+-> Customer accepts and funds the customer commitment
+-> Customer confirms attendance
+-> Provider confirms attendance
+-> The second confirmation triggers automatic settlement
+-> Both commitments return to their original owners
+```
+
+### Onchain transactions
+
+- Reservation created: https://testnet.arcscan.app/tx/0xb53b36843761607c01822b14918e8c4b3cdc694cd35f43d70a6318ddcc0bb2ff
+- Customer accepted: https://testnet.arcscan.app/tx/0x0b38c7da3aa07122524e2de521e2df30ebead58707a38373f92a693a8b167a43
+- Customer confirmed attendance: https://testnet.arcscan.app/tx/0x5453c8c8f209caf28c6b0c8c516ae715fc8b16050451da355fc639acbee42ce7
+- Provider confirmed attendance and automatic settlement: https://testnet.arcscan.app/tx/0x320c8195fdd03eace9796c4168b906946492786972eca0637946501f83b171bc
+
+### Final state
+
+- Status: `Resolved`
+- Outcome: `Completed`
+- Provider attendance: `Confirmed`
+- Customer attendance: `Confirmed`
+- Provider refund: `5 USDC`
+- Customer refund: `2 USDC`
+- Contract balance after settlement: `0 USDC`
+- Metadata title: `V2 mutual attendance proof`
+
+The lifecycle was independently checked against the hardened v2 contract state, emitted events and USDC `Transfer` logs.
+
 ## Legacy deployment evidence: v1
 
 The four completed scenarios below were executed against the original v1 deployment:
@@ -53,7 +86,7 @@ The four completed scenarios below were executed against the original v1 deploym
 - Provider: `0x329c253928e0727f31c7FfbdC83b143E55c36841`
 - Customer: `0x9e0c85CbF38CE6394192F10B3Aff6A4d8dE25E96`
 
-These records remain public historical evidence. New v2 evidence will be added after the hardened flows are completed.
+These records remain public historical evidence and are kept separate from the hardened v2 flows above.
 
 ## Verified flow 1: Early cancellation
 

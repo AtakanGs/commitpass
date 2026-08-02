@@ -38,6 +38,28 @@
       "contractBalanceAfterSettlement": "0 USDC",
       "independentlyVerified": true,
       "verifiedAt": "2026-08-02"
+    },
+    {
+      "scenario": "Mutual attendance with automatic settlement",
+      "reservationId": 2,
+      "metadataTitle": "V2 mutual attendance proof",
+      "providerCommitment": "5 USDC",
+      "customerCommitment": "2 USDC",
+      "providerCompensation": "2 USDC",
+      "creationTransaction": "0xb53b36843761607c01822b14918e8c4b3cdc694cd35f43d70a6318ddcc0bb2ff",
+      "acceptanceTransaction": "0x0b38c7da3aa07122524e2de521e2df30ebead58707a38373f92a693a8b167a43",
+      "customerAttendanceTransaction": "0x5453c8c8f209caf28c6b0c8c516ae715fc8b16050451da355fc639acbee42ce7",
+      "providerAttendanceTransaction": "0x320c8195fdd03eace9796c4168b906946492786972eca0637946501f83b171bc",
+      "resolutionTransaction": "0x320c8195fdd03eace9796c4168b906946492786972eca0637946501f83b171bc",
+      "providerAttendance": true,
+      "customerAttendance": true,
+      "providerRefund": "5 USDC",
+      "customerRefund": "2 USDC",
+      "finalStatus": "Resolved",
+      "finalOutcome": "Completed",
+      "contractBalanceAfterSettlement": "0 USDC",
+      "independentlyVerified": true,
+      "verifiedAt": "2026-08-02"
     }
   ],
   "legacyDeployments": [

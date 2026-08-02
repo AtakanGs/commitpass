@@ -4,7 +4,11 @@ export type VerifiedActivity = {
   transactionHash?: string;
 };
 
+export type DeploymentVersion = "v1" | "v2";
+
 export type VerifiedScenario = {
+  deployment: DeploymentVersion;
+  contractAddress: string;
   reservationId: number;
   eyebrow: string;
   title: string;
@@ -19,6 +23,93 @@ export type VerifiedScenario = {
 
 export const VERIFIED_SCENARIOS: VerifiedScenario[] = [
   {
+    deployment: "v2",
+    contractAddress: "0x8b28Ee06fD5d59d8886474733d7D3B58cDB33A5D",
+    reservationId: 1,
+    eyebrow: "EARLY CANCELLATION",
+    title: "Both commitments returned on hardened v2",
+    status: "Cancelled",
+    outcome: "Refund both",
+    summary:
+      "The customer accepted the reservation and both commitments were returned after cancellation inside the free-cancellation window.",
+    settlement:
+      "Provider 5 USDC | Customer 2 USDC returned",
+    verifiedAt: "2 August 2026",
+    finalTransaction:
+      "0x7d5d87eba00c0189d2b05ad6a3db02802c03f409e3cd1dde29bdd16132485e75",
+    activities: [
+      {
+        label: "Reservation created",
+        description:
+          "The provider locked a 5 USDC commitment on the hardened v2 contract.",
+        transactionHash:
+          "0x22733786a284ab45b31aeeeb9087c9ecd312be254cc4e0400d46e8aae6207616",
+      },
+      {
+        label: "Customer accepted",
+        description:
+          "The customer locked a 2 USDC commitment.",
+        transactionHash:
+          "0xa03497be11ad0a2987d3e1873e314c4b8d54cb5480cbe2dda7abea5c74629246",
+      },
+      {
+        label: "Cancelled in time",
+        description:
+          "The hardened v2 contract returned both funded commitments.",
+        transactionHash:
+          "0x7d5d87eba00c0189d2b05ad6a3db02802c03f409e3cd1dde29bdd16132485e75",
+      },
+    ],
+  },
+  {
+    deployment: "v2",
+    contractAddress: "0x8b28Ee06fD5d59d8886474733d7D3B58cDB33A5D",
+    reservationId: 2,
+    eyebrow: "MUTUAL ATTENDANCE",
+    title: "Both parties showed up on hardened v2",
+    status: "Resolved",
+    outcome: "Completed",
+    summary:
+      "Separate provider and customer wallets confirmed attendance during the valid check-in window and the hardened v2 contract settled automatically.",
+    settlement:
+      "Provider 5 USDC | Customer 2 USDC returned",
+    verifiedAt: "2 August 2026",
+    finalTransaction:
+      "0x320c8195fdd03eace9796c4168b906946492786972eca0637946501f83b171bc",
+    activities: [
+      {
+        label: "Reservation created",
+        description:
+          "The provider locked a 5 USDC commitment on hardened v2.",
+        transactionHash:
+          "0xb53b36843761607c01822b14918e8c4b3cdc694cd35f43d70a6318ddcc0bb2ff",
+      },
+      {
+        label: "Customer accepted",
+        description:
+          "The customer locked a 2 USDC commitment.",
+        transactionHash:
+          "0x0b38c7da3aa07122524e2de521e2df30ebead58707a38373f92a693a8b167a43",
+      },
+      {
+        label: "Customer checked in",
+        description:
+          "The customer confirmed attendance during the valid window.",
+        transactionHash:
+          "0x5453c8c8f209caf28c6b0c8c516ae715fc8b16050451da355fc639acbee42ce7",
+      },
+      {
+        label: "Provider checked in",
+        description:
+          "The second confirmation triggered automatic settlement and both refunds.",
+        transactionHash:
+          "0x320c8195fdd03eace9796c4168b906946492786972eca0637946501f83b171bc",
+      },
+    ],
+  },
+  {
+    deployment: "v1",
+    contractAddress: "0x02b02Cdb93B32a9bcDC9cb5904Cef2ABb2F7De6D",
     reservationId: 1,
     eyebrow: "EARLY CANCELLATION",
     title: "Both commitments returned",
@@ -47,6 +138,8 @@ export const VERIFIED_SCENARIOS: VerifiedScenario[] = [
     ],
   },
   {
+    deployment: "v1",
+    contractAddress: "0x02b02Cdb93B32a9bcDC9cb5904Cef2ABb2F7De6D",
     reservationId: 3,
     eyebrow: "MUTUAL ATTENDANCE",
     title: "Both parties showed up",
@@ -90,6 +183,8 @@ export const VERIFIED_SCENARIOS: VerifiedScenario[] = [
     ],
   },
   {
+    deployment: "v1",
+    contractAddress: "0x02b02Cdb93B32a9bcDC9cb5904Cef2ABb2F7De6D",
     reservationId: 5,
     eyebrow: "CUSTOMER NO-SHOW",
     title: "Provider compensated",
@@ -133,6 +228,8 @@ export const VERIFIED_SCENARIOS: VerifiedScenario[] = [
     ],
   },
   {
+    deployment: "v1",
+    contractAddress: "0x02b02Cdb93B32a9bcDC9cb5904Cef2ABb2F7De6D",
     reservationId: 7,
     eyebrow: "PROVIDER NO-SHOW",
     title: "Customer protected",
@@ -185,10 +282,16 @@ export const VERIFIED_SCENARIOS: VerifiedScenario[] = [
 ];
 
 export function getVerifiedScenario(
+  contractAddress: string,
   reservationId: number,
 ) {
+  const normalizedContract =
+    contractAddress.toLowerCase();
+
   return VERIFIED_SCENARIOS.find(
     (scenario) =>
-      scenario.reservationId === reservationId,
+      scenario.reservationId === reservationId &&
+      scenario.contractAddress.toLowerCase() ===
+        normalizedContract,
   );
 }

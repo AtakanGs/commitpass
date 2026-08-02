@@ -2,6 +2,7 @@ import {
   getVerifiedScenario,
   type VerifiedActivity,
 } from "@/lib/verifiedScenarios";
+import { getContractAddress } from "@/lib/contract";
 
 const ARCSCAN_TX = "https://testnet.arcscan.app/tx/";
 
@@ -69,6 +70,7 @@ export function ReservationActivity(
   props: ReservationActivityProps,
 ) {
   const verified = getVerifiedScenario(
+    getContractAddress(),
     Number(props.reservationId),
   );
 

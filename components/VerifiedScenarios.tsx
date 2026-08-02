@@ -14,15 +14,15 @@ export function VerifiedScenarios() {
             VERIFIED ON ARC TESTNET
           </p>
           <h2>
-            Four legacy outcomes. Publicly verifiable.
+            Verified outcomes across hardened v2 and legacy v1.
           </h2>
         </div>
 
         <p>
-          These scenarios were completed on the original v1
-          deployment. The live application now targets the
-          hardened v2 contract, and new v2 evidence will replace
-          these historical examples.
+          Current hardened v2 evidence is shown alongside
+          historical v1 examples. Every reservation is scoped by
+          its contract deployment, so repeated reservation IDs
+          cannot be mixed.
         </p>
       </div>
 
@@ -30,7 +30,11 @@ export function VerifiedScenarios() {
         {VERIFIED_SCENARIOS.map((scenario, index) => (
           <article
             className="verifiedCard card"
-            key={scenario.reservationId}
+            key={
+              scenario.contractAddress +
+              "-" +
+              scenario.reservationId
+            }
           >
             <div className="verifiedTopline">
               <span>
@@ -40,13 +44,15 @@ export function VerifiedScenarios() {
               </span>
 
               <span className="verifiedBadge">
-                Legacy v1
+                {scenario.deployment === "v2"
+                  ? "Hardened v2"
+                  : "Legacy v1"}
               </span>
             </div>
 
             <div className="verifiedIdentity">
               <span>
-                Onchain reservation #
+                {scenario.deployment.toUpperCase()} reservation #
                 {scenario.reservationId}
               </span>
               <h3>{scenario.title}</h3>
