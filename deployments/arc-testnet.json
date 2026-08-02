@@ -16,8 +16,10 @@
     "transactionStatus": "success",
     "runtimeBytecodeBytes": 8265,
     "localArtifactBytecodeBytes": 8265,
-    "nextReservationId": 1,
-    "independentlyVerifiedAt": "2026-08-02"
+    "independentlyVerifiedAt": "2026-08-02",
+    "initialNextReservationId": 1,
+    "currentNextReservationId": 4,
+    "currentStateVerifiedAt": "2026-08-02"
   },
   "verifiedFlows": [
     {
@@ -57,6 +59,29 @@
       "customerRefund": "2 USDC",
       "finalStatus": "Resolved",
       "finalOutcome": "Completed",
+      "contractBalanceAfterSettlement": "0 USDC",
+      "independentlyVerified": true,
+      "verifiedAt": "2026-08-02"
+    },
+    {
+      "scenario": "Hardened undisputed customer no-show claim",
+      "reservationId": 3,
+      "metadataTitle": "V2 hardened customer no-show proof",
+      "providerCommitment": "5 USDC",
+      "customerCommitment": "2 USDC",
+      "providerCompensation": "2 USDC",
+      "creationTransaction": "0xc354e15c6cb94179b98d10b126cf2fedfa384071ed0d2bb6b34838b4d9a60b2f",
+      "acceptanceTransaction": "0xcf0b147f32c0663ee422c4bd4a631feaa55ae5b4d01cb705d1862c42c0841f02",
+      "providerAttendanceTransaction": "0x08eab110c3dca118195b9534f0bf323a5486a80420e794db9c005a1b5ad2f26f",
+      "claimTransaction": "0x10e4ae8a9e08dc94783479fccc8bbce565bceaa54c247956e167b9497f6f576c",
+      "resolutionTransaction": "0xfef07c56f70a74cc0a3fbb97ab0b8502a6f51a65c74a0b7636b585d772b64f34",
+      "claimant": "Provider",
+      "providerAttendance": true,
+      "customerAttendance": false,
+      "providerSettlement": "7 USDC",
+      "customerSettlement": "0 USDC",
+      "finalStatus": "Resolved",
+      "finalOutcome": "CustomerNoShow",
       "contractBalanceAfterSettlement": "0 USDC",
       "independentlyVerified": true,
       "verifiedAt": "2026-08-02"

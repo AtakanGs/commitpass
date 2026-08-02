@@ -78,6 +78,44 @@ Provider creates and funds the reservation
 
 The lifecycle was independently checked against the hardened v2 contract state, emitted events and USDC `Transfer` logs.
 
+## Verified v2 flow 3: Hardened customer no-show
+
+Reservation `#3` demonstrates the claimant-attendance protection added in hardened v2:
+
+```text
+Provider creates and funds the reservation
+-> Customer accepts and funds the customer commitment
+-> Provider confirms attendance during the valid check-in window
+-> Customer does not confirm attendance
+-> Provider opens a customer no-show claim
+-> Customer does not dispute within the configured window
+-> Provider finalizes the undisputed claim
+-> Provider receives both locked commitments
+```
+
+### Onchain transactions
+
+- Reservation created: https://testnet.arcscan.app/tx/0xc354e15c6cb94179b98d10b126cf2fedfa384071ed0d2bb6b34838b4d9a60b2f
+- Customer accepted: https://testnet.arcscan.app/tx/0xcf0b147f32c0663ee422c4bd4a631feaa55ae5b4d01cb705d1862c42c0841f02
+- Provider confirmed attendance: https://testnet.arcscan.app/tx/0x08eab110c3dca118195b9534f0bf323a5486a80420e794db9c005a1b5ad2f26f
+- Customer no-show claim opened: https://testnet.arcscan.app/tx/0x10e4ae8a9e08dc94783479fccc8bbce565bceaa54c247956e167b9497f6f576c
+- Undisputed claim finalized: https://testnet.arcscan.app/tx/0xfef07c56f70a74cc0a3fbb97ab0b8502a6f51a65c74a0b7636b585d772b64f34
+
+### Final state
+
+- Status: `Resolved`
+- Outcome: `CustomerNoShow`
+- Provider attendance: `Confirmed`
+- Customer attendance: `Pending`
+- Provider settlement: `7 USDC`
+- Customer settlement: `0 USDC`
+- Contract balance after settlement: `0 USDC`
+- Metadata title: `V2 hardened customer no-show proof`
+
+This flow directly verifies the hardened v2 rule: a provider cannot accuse the customer of a no-show unless the provider first recorded its own attendance during the valid check-in window.
+
+The complete lifecycle was independently checked against contract state, emitted CommitPass events, transaction senders, the dispute deadline and USDC `Transfer` logs.
+
 ## Legacy deployment evidence: v1
 
 The four completed scenarios below were executed against the original v1 deployment:
