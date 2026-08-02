@@ -98,6 +98,7 @@ export function CreateReservationForm() {
       const params = new URLSearchParams({
         id: result.reservationId.toString(),
         title: title.trim(),
+        salt: result.metadataSalt,
       });
 
       const shareUrl =
@@ -156,8 +157,13 @@ export function CreateReservationForm() {
           onChange={(event) =>
             setTitle(event.target.value)
           }
+          maxLength={160}
           required
         />
+        <small className="fieldHelp">
+          Use a short label only. Do not include names, contact
+          details or other personal information.
+        </small>
       </label>
 
       <label>

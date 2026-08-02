@@ -1195,3 +1195,10 @@ dl dd { margin:0; font-weight:700; }
 }
 
 /* End CommitPass public proof page — simplified */
+
+.fieldHelp {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.5;
+}

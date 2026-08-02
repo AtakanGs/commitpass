@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { keccak256, stringToHex, type Address } from "viem";
+import { type Address } from "viem";
 import { ReservationActivity } from "@/components/ReservationActivity";
 import { SettlementPreview } from "@/components/SettlementPreview";
 import {
@@ -18,6 +18,7 @@ import {
   getConnectedAccount,
   WALLET_ACCOUNT_EVENT,
 } from "@/lib/wallet";
+import { verifyReservationMetadata } from "@/lib/metadata";
 
 function sameAddress(first?: string, second?: string) {
   return Boolean(
@@ -39,12 +40,14 @@ type ManageReservationProps = {
   initialId?: string;
   autoLoad?: boolean;
   reservationTitle?: string;
+  reservationSalt?: string;
 };
 
 export function ManageReservation({
   initialId = "1",
   autoLoad = false,
   reservationTitle,
+  reservationSalt,
 }: ManageReservationProps) {
   const [id, setId] = useState(initialId);
   const [reservation, setReservation] =
@@ -150,8 +153,11 @@ export function ManageReservation({
   const metadataVerified = Boolean(
     reservation &&
       reservationTitle &&
-      keccak256(stringToHex(reservationTitle)) ===
+      verifyReservationMetadata(
+        reservationTitle,
         reservation.metadataHash,
+        reservationSalt,
+      ),
   );
   const nowSeconds = Math.floor(now / 1000);
 
@@ -281,6 +287,10 @@ export function ManageReservation({
       params.set("title", reservationTitle);
     }
 
+    if (reservationSalt) {
+      params.set("salt", reservationSalt);
+    }
+
     return "/reservation?" + params.toString();
   }
 
@@ -349,8 +359,8 @@ export function ManageReservation({
                 }
               >
                 {metadataVerified
-                  ? "Verified against the onchain metadata hash"
-                  : "Shared label does not match the onchain metadata hash"}
+                  ? "Verified against the onchain metadata reference"
+                  : "Shared label does not match the onchain metadata reference"}
               </small>
             </div>
           ) : null}

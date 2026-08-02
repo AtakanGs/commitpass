@@ -4,15 +4,17 @@ import {
   getAddress,
   http,
   isAddress,
-  keccak256,
   parseEventLogs,
   parseUnits,
-  stringToHex,
   type Address,
   type Hash,
 } from "viem";
 import { commitmentEscrowAbi, erc20Abi } from "@/lib/abis";
 import { arcTestnet, ARC_TESTNET_RPC, ARC_USDC_ADDRESS } from "@/lib/arc";
+import {
+  createMetadataSalt,
+  hashReservationMetadata,
+} from "@/lib/metadata";
 import { connectWallet } from "@/lib/wallet";
 
 const arcPublicClient = createPublicClient({
@@ -129,7 +131,11 @@ export async function createReservation(input: {
   const compensation = usdc(input.providerCompensation);
   const startTime = BigInt(Math.floor(input.startTime.getTime() / 1000));
   const cancellationDeadline = startTime - BigInt(input.freeCancellationHours * 3600);
-  const metadataHash = keccak256(stringToHex(input.title));
+  const metadataSalt = createMetadataSalt();
+  const metadataHash = hashReservationMetadata(
+    input.title,
+    metadataSalt,
+  );
 
   await approveCommitment(providerBond);
   const { account, walletClient, publicClient } = await connectWallet();
@@ -170,6 +176,7 @@ export async function createReservation(input: {
   return {
     hash,
     reservationId: createdLog.args.reservationId,
+    metadataSalt,
   };
 }
 

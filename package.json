@@ -15,6 +15,8 @@
     "contracts:test": "hardhat test",
     "test": "npm run contracts:test",
     "deploy:arc": "hardhat run scripts/deploy.cjs --network arcTestnet",
+    "verify:arcscan": "node scripts/check-arcscan-verification.cjs",
+    "verify:arcscan:source": "node scripts/verify-arcscan-source.cjs",
     "ci": "npm run contracts:compile && npm run contracts:test && npm run typecheck && npm run build"
   },
   "dependencies": {

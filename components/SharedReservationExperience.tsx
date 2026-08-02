@@ -17,6 +17,12 @@ export function SharedReservationExperience() {
     searchParams.get("title")?.trim().slice(0, 160) ||
     undefined;
 
+  const rawSalt = searchParams.get("salt")?.trim();
+  const sharedSalt =
+    rawSalt && /^0x[0-9a-fA-F]{64}$/.test(rawSalt)
+      ? rawSalt
+      : undefined;
+
   return (
     <main className="sharedPage">
       <SiteNav />
@@ -86,6 +92,7 @@ export function SharedReservationExperience() {
           initialId={id}
           autoLoad={Boolean(id)}
           reservationTitle={sharedTitle}
+          reservationSalt={sharedSalt}
         />
       </section>
 

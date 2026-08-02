@@ -56,7 +56,7 @@ export function VerifiedScenarios() {
       id="proof"
     >
       <div className="sectionHead proofSectionHead">
-        <p className="eyebrow">TESTED ON ARC</p>
+        <p className="eyebrow">TESTED ON ARC TESTNET</p>
         <h2>See what happens to the funds.</h2>
         <p>
           Each example shows the final payout after a

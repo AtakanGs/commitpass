@@ -87,7 +87,11 @@ NEXT_PUBLIC_COMMITPASS_CONTRACT_ADDRESS=0x...
 
 ## Security boundaries
 
-This repository is a testnet hackathon prototype and has not been independently audited. The current v2 deployment requires claimants to confirm their own attendance before opening a no-show claim. It must not be used with real funds. No personal data should be written onchain. The metadata field stores only a salted hash or non-identifying reference.
+This repository is a testnet hackathon prototype and has not been independently audited. The current deployment requires claimants to confirm their own attendance before opening a no-show claim. It must not be used with real funds.
+
+New invitations hash the session label with a random 32-byte salt before storing the reference onchain. The invitation URL carries the label and salt so the recipient can verify the reference. Existing public evidence without a salt remains readable. Session labels must not contain names, contact details or other personal information.
+
+The arbiter is a single dedicated testnet account and remains a liveness and centralization boundary. Disputed reservations require the arbiter to resolve them. If neither participant confirms attendance, participant no-show claims are unavailable and the arbiter emergency-refund path is the recovery mechanism. A production deployment should use stronger arbiter governance and a permissionless timeout-based recovery path.
 
 ## Author
 
