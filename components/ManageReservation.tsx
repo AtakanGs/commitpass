@@ -127,7 +127,19 @@ export function ManageReservation({
       setNow(Date.now());
     } catch (caught) {
       setReservation(undefined);
-      setMessage(explainContractError(caught));
+
+      const rawMessage =
+        caught instanceof Error
+          ? caught.message
+          : String(caught);
+
+      setMessage(
+        /InvalidState/i.test(rawMessage)
+          ? "Reservation #" +
+              targetId +
+              " was not found on the current CommitPass deployment."
+          : explainContractError(caught),
+      );
     } finally {
       setBusy(false);
     }
