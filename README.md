@@ -6,8 +6,9 @@
 
 - Web app: https://commitpass.vercel.app/
 - Network: Arc Testnet
-- Contract: `0x02b02Cdb93B32a9bcDC9cb5904Cef2ABb2F7De6D`
-- Verified onchain flows: Reservation `#1` - early cancellation and mutual refund; Reservation `#3` - mutual attendance and automatic refunds; Reservation `#5` - undisputed customer no-show claim and provider compensation; Reservation `#7` - customer-confirmed attendance followed by an undisputed provider no-show claim
+- Current contract (v2): `0x8b28Ee06fD5d59d8886474733d7D3B58cDB33A5D`
+- Deployment transaction: https://testnet.arcscan.app/tx/0xddc6ecc2e13a2680e195fa35eeb83cf28ec39b7eb2219d618bab222a76da1acb
+- Legacy v1 verified flows: Reservation `#1` - early cancellation; Reservation `#3` - mutual attendance; Reservation `#5` - customer no-show settlement; Reservation `#7` - customer-confirmed provider no-show settlement
 - Testnet evidence: [docs/testnet-evidence.md](docs/testnet-evidence.md)
 
 CommitPass is a two-sided programmable commitment protocol for reservations and limited-capacity services. Customers and providers lock small refundable USDC commitments on Arc. When both honour the reservation, both commitments return. If one side no-shows, the other receives pre-agreed compensation.
@@ -22,6 +23,7 @@ Built by **Atakan Gündallı** for the Programmable Money Hackathon.
 - Mutual attendance confirmation
 - Customer no-show claims
 - Provider no-show claims with asymmetric compensation
+- Claimant attendance enforcement before no-show claims
 - Dispute window and arbiter resolution
 - Duplicate-settlement protection
 - Arc Testnet wallet connection
@@ -66,7 +68,7 @@ The web application is exported as static files in `out/`, which keeps hosting s
 
 1. Fund a dedicated testnet deployer with faucet USDC.
 2. Copy `.env.example` to `.env`.
-3. Add `DEPLOYER_PRIVATE_KEY` and optionally `ARBITER_ADDRESS` locally.
+3. Add `DEPLOYER_PRIVATE_KEY` and a dedicated `ARBITER_ADDRESS` locally.
 4. Never commit `.env`.
 5. Run:
 
@@ -82,7 +84,7 @@ NEXT_PUBLIC_COMMITPASS_CONTRACT_ADDRESS=0x...
 
 ## Security boundaries
 
-This repository is a testnet hackathon prototype and has not been independently audited. It must not be used with real funds. No personal data should be written onchain. The metadata field stores only a salted hash or non-identifying reference.
+This repository is a testnet hackathon prototype and has not been independently audited. The current v2 deployment requires claimants to confirm their own attendance before opening a no-show claim. It must not be used with real funds. No personal data should be written onchain. The metadata field stores only a salted hash or non-identifying reference.
 
 ## Author
 

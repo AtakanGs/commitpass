@@ -43,7 +43,7 @@ export function getContractAddress(): Address {
   const value =
     configured && isAddress(configured)
       ? configured
-      : "0x02b02Cdb93B32a9bcDC9cb5904Cef2ABb2F7De6D";
+      : "0x8b28Ee06fD5d59d8886474733d7D3B58cDB33A5D";
 
   return getAddress(value);
 }

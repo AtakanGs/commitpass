@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { VERIFIED_SCENARIOS } from "@/lib/verifiedScenarios";
 
 const ARCSCAN_TX = "https://testnet.arcscan.app/tx/";
@@ -15,14 +14,15 @@ export function VerifiedScenarios() {
             VERIFIED ON ARC TESTNET
           </p>
           <h2>
-            Four outcomes. Independently verifiable.
+            Four legacy outcomes. Publicly verifiable.
           </h2>
         </div>
 
         <p>
-          These scenarios were completed end to end with
-          separate provider and customer wallets. Each card is
-          a public example, not an active user reservation.
+          These scenarios were completed on the original v1
+          deployment. The live application now targets the
+          hardened v2 contract, and new v2 evidence will replace
+          these historical examples.
         </p>
       </div>
 
@@ -35,12 +35,12 @@ export function VerifiedScenarios() {
             <div className="verifiedTopline">
               <span>
                 SCENARIO{" "}
-                {String(index + 1).padStart(2, "0")} ?{" "}
+                {String(index + 1).padStart(2, "0")} |{" "}
                 {scenario.eyebrow}
               </span>
 
               <span className="verifiedBadge">
-                Verified
+                Legacy v1
               </span>
             </div>
 
@@ -81,15 +81,14 @@ export function VerifiedScenarios() {
             </div>
 
             <div className="verifiedActions">
-              <Link
+              <a
                 className="button secondary"
-                href={
-                  "/reservation?id=" +
-                  scenario.reservationId
-                }
+                href="https://github.com/AtakanGs/commitpass/blob/main/docs/testnet-evidence.md"
+                target="_blank"
+                rel="noreferrer"
               >
-                Inspect scenario
-              </Link>
+                Evidence record
+              </a>
 
               {scenario.finalTransaction ? (
                 <a

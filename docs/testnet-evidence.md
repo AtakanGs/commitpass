@@ -2,13 +2,30 @@
 
 CommitPass has been tested end to end using separate provider and customer wallets on Arc Testnet.
 
-## Deployment
+## Current deployment: v2
 
 - Network: Arc Testnet
 - Chain ID: `5042002`
-- Contract: `0x02b02Cdb93B32a9bcDC9cb5904Cef2ABb2F7De6D`
+- Contract: `0x8b28Ee06fD5d59d8886474733d7D3B58cDB33A5D`
+- Deployment transaction: https://testnet.arcscan.app/tx/0xddc6ecc2e13a2680e195fa35eeb83cf28ec39b7eb2219d618bab222a76da1acb
+- USDC: `0x3600000000000000000000000000000000000000`
+- Deployer: `0x329c253928e0727f31c7FfbdC83b143E55c36841`
+- Dedicated arbiter: `0x31B7Be1e0d05BA7866f03a4Dc6244e34D9191e29`
+- Runtime bytecode: `8265 bytes`
+- Initial reservation ID: `1`
+- Independently verified: `2 August 2026`
+
+The v2 contract requires a no-show claimant to have confirmed their own attendance during the valid check-in window. The arbiter is also separated from the provider and customer wallets.
+
+## Legacy deployment evidence: v1
+
+The four completed scenarios below were executed against the original v1 deployment:
+
+- Legacy contract: `0x02b02Cdb93B32a9bcDC9cb5904Cef2ABb2F7De6D`
 - Provider: `0x329c253928e0727f31c7FfbdC83b143E55c36841`
 - Customer: `0x9e0c85CbF38CE6394192F10B3Aff6A4d8dE25E96`
+
+These records remain public historical evidence. New v2 evidence will be added after the hardened flows are completed.
 
 ## Verified flow 1: Early cancellation
 
@@ -64,6 +81,8 @@ The `Completed` outcome is only reached after both parties confirm attendance. S
 
 ## Verified flow 3: Undisputed customer no-show claim
 
+> Legacy v1 behavior: the provider did not confirm attendance before opening this claim. V2 closes this gap by requiring claimant attendance. This flow remains evidence of the original settlement mechanism, not of the hardened v2 claimant rule.
+
 Reservation `#5` completed the following optimistic claim flow:
 
 ```text
@@ -99,6 +118,8 @@ Provider creates reservation
 This flow demonstrates CommitPass's optimistic dispute mechanism. A no-show claim can be challenged by the accused party during the dispute window. Because Reservation `#5` was not disputed, the pending customer no-show outcome became final after the deadline.
 
 ## Verified flow 4: Undisputed provider no-show claim
+
+> This legacy flow is compatible with the v2 claimant rule because the customer confirmed attendance before opening the provider no-show claim.
 
 Reservation `#7` completed the following optimistic claim flow:
 
@@ -139,4 +160,4 @@ Provider creates reservation
 
 This is the strongest live no-show proof in the current evidence set because the claimant confirmed attendance during the valid check-in window before opening the provider no-show claim.
 
-Evidence last updated on 2 August 2026.
+Deployment and evidence record updated on 2 August 2026.
