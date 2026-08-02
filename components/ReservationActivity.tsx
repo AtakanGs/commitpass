@@ -58,7 +58,7 @@ function currentStateActivity(
     label: "Current onchain state",
     description:
       props.outcome !== "None"
-        ? props.status + " ? " + props.outcome
+        ? props.status + " / " + props.outcome
         : props.status,
   });
 
