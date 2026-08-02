@@ -306,6 +306,8 @@ export function ManageReservation({
               setId(event.target.value.replace(/\D/g, ""))
             }
             aria-label="Reservation ID"
+            placeholder="Reservation ID"
+            inputMode="numeric"
           />
           <button
             className="button secondary"

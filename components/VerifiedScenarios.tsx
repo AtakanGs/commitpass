@@ -5,31 +5,40 @@ const ARCSCAN_TX = "https://testnet.arcscan.app/tx/";
 
 export function VerifiedScenarios() {
   return (
-    <section className="shell section proofSection" id="proof">
+    <section
+      className="shell section proofSection"
+      id="proof"
+    >
       <div className="sectionHead proofSectionHead">
         <div>
-          <p className="eyebrow">VERIFIED ON ARC TESTNET</p>
+          <p className="eyebrow">
+            VERIFIED ON ARC TESTNET
+          </p>
           <h2>
-            Do not trust the pitch. Inspect the outcomes.
+            Four outcomes. Independently verifiable.
           </h2>
         </div>
 
         <p>
-          These reservations were completed end to end with
-          separate provider and customer wallets. Every
-          recorded transaction remains independently
-          verifiable.
+          These scenarios were completed end to end with
+          separate provider and customer wallets. Each card is
+          a public example, not an active user reservation.
         </p>
       </div>
 
       <div className="verifiedGrid">
-        {VERIFIED_SCENARIOS.map((scenario) => (
+        {VERIFIED_SCENARIOS.map((scenario, index) => (
           <article
             className="verifiedCard card"
             key={scenario.reservationId}
           >
             <div className="verifiedTopline">
-              <span>{scenario.eyebrow}</span>
+              <span>
+                SCENARIO{" "}
+                {String(index + 1).padStart(2, "0")} ?{" "}
+                {scenario.eyebrow}
+              </span>
+
               <span className="verifiedBadge">
                 Verified
               </span>
@@ -37,7 +46,8 @@ export function VerifiedScenarios() {
 
             <div className="verifiedIdentity">
               <span>
-                Reservation #{scenario.reservationId}
+                Onchain reservation #
+                {scenario.reservationId}
               </span>
               <h3>{scenario.title}</h3>
             </div>
@@ -47,6 +57,7 @@ export function VerifiedScenarios() {
                 <span>Status</span>
                 <strong>{scenario.status}</strong>
               </div>
+
               <div>
                 <span>Outcome</span>
                 <strong>{scenario.outcome}</strong>
@@ -77,7 +88,7 @@ export function VerifiedScenarios() {
                   scenario.reservationId
                 }
               >
-                Open scenario
+                Inspect scenario
               </Link>
 
               {scenario.finalTransaction ? (

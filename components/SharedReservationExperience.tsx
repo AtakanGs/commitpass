@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ManageReservation } from "@/components/ManageReservation";
-import { WalletStatus } from "@/components/WalletStatus";
+import { SiteFooter } from "@/components/SiteFooter";
+import { SiteNav } from "@/components/SiteNav";
 
 export function SharedReservationExperience() {
   const searchParams = useSearchParams();
@@ -18,25 +19,11 @@ export function SharedReservationExperience() {
 
   return (
     <main className="sharedPage">
-      <nav className="nav shell">
-        <Link
-          className="brand"
-          href="/"
-          aria-label="CommitPass home"
-        >
-          <span className="brandMark">C</span>
-          <span>CommitPass</span>
-        </Link>
-
-        <div className="navMeta">
-          <span className="networkPill">Arc Testnet</span>
-          <WalletStatus />
-        </div>
-      </nav>
+      <SiteNav />
 
       <section className="sharedHero shell">
         <Link className="backLink" href="/">
-          Back to CommitPass
+          Back to home
         </Link>
 
         <p className="eyebrow">
@@ -46,13 +33,13 @@ export function SharedReservationExperience() {
         <h1>
           {id
             ? "Reservation #" + id
-            : "Open a reservation"}
+            : "Open or manage a reservation"}
         </h1>
 
         <p>
-          Review the terms, see every possible settlement
-          and connect the invited wallet only when an action
-          is required.
+          {id
+            ? "Review the terms, see every possible settlement and connect the invited wallet only when an action is required."
+            : "Enter the onchain reservation ID below. CommitPass will then show the current state and only the actions available to the connected role."}
         </p>
       </section>
 
@@ -86,41 +73,23 @@ export function SharedReservationExperience() {
           <div className="trustPoint">
             <span>03</span>
             <div>
-              <strong>Settled on Arc</strong>
+              <strong>Role-aware actions</strong>
               <p>
-                Reservation state and USDC settlement remain
-                independently verifiable.
+                Only actions relevant to the connected provider
+                or customer are enabled.
               </p>
             </div>
           </div>
         </aside>
 
         <ManageReservation
-          initialId={id || "1"}
+          initialId={id}
           autoLoad={Boolean(id)}
           reservationTitle={sharedTitle}
         />
       </section>
 
-      <footer className="shell footer">
-        <div>
-          <strong>CommitPass</strong>
-          <p>
-            Two-sided programmable reservation protection.
-          </p>
-        </div>
-
-        <div className="footerLinks">
-          <Link href="/">Create reservation</Link>
-          <a
-            href="https://github.com/AtakanGs/commitpass"
-            target="_blank"
-            rel="noreferrer"
-          >
-            GitHub
-          </a>
-        </div>
-      </footer>
+      <SiteFooter />
     </main>
   );
 }

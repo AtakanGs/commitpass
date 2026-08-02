@@ -718,3 +718,328 @@ dl dd { margin:0; font-weight:700; }
     flex-direction: column;
   }
 }
+
+/* Task-focused product navigation */
+
+.navLinks {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.navLinks a {
+  transition: color .2s ease;
+}
+
+.navLinks a:hover {
+  color: var(--blue);
+}
+
+.homeHero {
+  display: grid;
+  grid-template-columns: 1.02fr .98fr;
+  gap: 70px;
+  align-items: center;
+  min-height: calc(100vh - 84px);
+  padding-block: 55px 85px;
+}
+
+.homeHeroCopy h1 {
+  font-size: clamp(52px, 6.6vw, 84px);
+}
+
+.actionChooser {
+  padding: 34px;
+}
+
+.actionChooser h2 {
+  font-size: 36px;
+}
+
+.chooserLead {
+  margin: 15px 0 0;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.homeTaskGrid {
+  display: grid;
+  gap: 13px;
+  margin-top: 27px;
+}
+
+.homeTaskCard {
+  display: grid;
+  gap: 10px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: white;
+  transition:
+    border-color .2s ease,
+    box-shadow .2s ease,
+    transform .2s ease;
+}
+
+.homeTaskCard:hover {
+  transform: translateY(-2px);
+  border-color: rgba(22, 105, 237, .35);
+  box-shadow: 0 18px 40px rgba(21, 47, 82, .09);
+}
+
+.homeTaskPrimary {
+  background:
+    linear-gradient(
+      135deg,
+      rgba(22, 105, 237, .07),
+      rgba(109, 77, 242, .06)
+    ),
+    white;
+}
+
+.homeTaskCard h3 {
+  margin: 0;
+  font-size: 25px;
+}
+
+.homeTaskCard p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.homeTaskCard strong {
+  margin-top: 5px;
+  color: var(--blue);
+  font-size: 13px;
+}
+
+.taskRole {
+  color: var(--teal);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.compactSection {
+  padding-block: 95px;
+}
+
+.compactSectionHead {
+  margin-bottom: 36px;
+}
+
+.flowSteps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.flowStep {
+  padding: 27px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: white;
+}
+
+.flowStep > span {
+  color: var(--teal);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.flowStep h3 {
+  margin: 20px 0 9px;
+}
+
+.flowStep p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.proofCta {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 35px;
+  align-items: center;
+  margin-bottom: 110px;
+  padding: 34px;
+}
+
+.proofCta h2 {
+  max-width: 720px;
+  font-size: clamp(30px, 4vw, 48px);
+}
+
+.proofCta p:last-child {
+  max-width: 720px;
+  margin: 17px 0 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.taskPageHero {
+  max-width: 1180px;
+  padding-top: 62px;
+  padding-bottom: 42px;
+}
+
+.taskPageHero h1 {
+  font-size: clamp(48px, 7vw, 76px);
+}
+
+.taskPageHero > p:last-child {
+  max-width: 720px;
+  margin: 24px 0 0;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1.7;
+}
+
+.singleWorkbench {
+  display: grid;
+  grid-template-columns: .7fr 1.3fr;
+  gap: 30px;
+  align-items: start;
+  padding-bottom: 110px;
+}
+
+.taskSidebar {
+  position: sticky;
+  top: 24px;
+  padding: 28px;
+}
+
+.taskSidebar h2 {
+  margin-bottom: 28px;
+  font-size: 32px;
+}
+
+.taskPoint {
+  display: grid;
+  grid-template-columns: 38px 1fr;
+  gap: 13px;
+  padding: 18px 0;
+  border-top: 1px solid var(--line);
+}
+
+.taskPoint > span {
+  color: var(--teal);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.taskPoint strong {
+  font-family: "Manrope", sans-serif;
+}
+
+.taskPoint p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+@media (max-width: 980px) {
+  .homeHero,
+  .singleWorkbench {
+    grid-template-columns: 1fr;
+  }
+
+  .homeHero {
+    min-height: auto;
+    gap: 42px;
+    padding-top: 52px;
+  }
+
+  .actionChooser {
+    max-width: 720px;
+  }
+
+  .flowSteps {
+    grid-template-columns: 1fr;
+  }
+
+  .proofCta {
+    grid-template-columns: 1fr;
+  }
+
+  .taskSidebar {
+    position: static;
+  }
+}
+
+@media (max-width: 820px) {
+  .nav {
+    flex-wrap: wrap;
+    gap: 12px;
+    padding-block: 10px;
+  }
+
+  .navMeta {
+    margin-left: auto;
+  }
+
+  .navLinks {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+    padding-top: 11px;
+    border-top: 1px solid var(--line);
+  }
+}
+
+@media (max-width: 600px) {
+  .homeHero {
+    gap: 30px;
+    padding-top: 35px;
+    padding-bottom: 65px;
+  }
+
+  .actionChooser {
+    padding: 22px;
+    border-radius: 22px;
+  }
+
+  .actionChooser h2 {
+    font-size: 30px;
+  }
+
+  .compactSection {
+    padding-block: 70px;
+  }
+
+  .proofCta {
+    margin-bottom: 75px;
+    padding: 24px;
+  }
+
+  .taskPageHero {
+    padding-top: 38px;
+  }
+
+  .singleWorkbench {
+    gap: 18px;
+    padding-bottom: 75px;
+  }
+
+  .navLinks {
+    gap: 16px;
+    justify-content: flex-start;
+    overflow-x: auto;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .footerLinks {
+    flex-wrap: wrap;
+  }
+}

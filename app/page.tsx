@@ -1,111 +1,137 @@
-import Image from "next/image";
-import { CreateReservationForm } from "@/components/CreateReservationForm";
-import { ManageReservation } from "@/components/ManageReservation";
-import { WalletStatus } from "@/components/WalletStatus";
-import { VerifiedScenarios } from "@/components/VerifiedScenarios";
+import Link from "next/link";
+import { SiteFooter } from "@/components/SiteFooter";
+import { SiteNav } from "@/components/SiteNav";
 
-const outcomes = [
-  ["Both attend", "Both commitments return automatically."],
-  ["Customer cancels early", "Both commitments return and the slot can reopen."],
-  ["Customer no-show", "The provider receives the pre-agreed customer commitment."],
-  ["Provider no-show", "The customer is refunded and compensated from the provider bond."],
+const steps = [
+  {
+    number: "01",
+    title: "Both parties commit",
+    description:
+      "The provider and customer lock refundable USDC commitments before the reservation.",
+  },
+  {
+    number: "02",
+    title: "Attendance is recorded",
+    description:
+      "Each party confirms attendance during the programmed check-in window.",
+  },
+  {
+    number: "03",
+    title: "The contract settles",
+    description:
+      "Commitments are returned or compensation is distributed according to the agreed rules.",
+  },
 ];
 
 export default function Home() {
   return (
     <main>
-      <nav className="nav shell">
-        <a className="brand" href="#top" aria-label="CommitPass home">
-          <span className="brandMark">C</span>
-          <span>CommitPass</span>
-        </a>
-        <div className="navMeta">
-          <span className="networkPill">Arc Testnet</span>
-          <WalletStatus />
-        </div>
-      </nav>
+      <SiteNav />
 
-      <section className="hero shell" id="top">
-        <div className="heroCopy">
-          <p className="eyebrow">PROGRAMMABLE RESERVATION PROTECTION</p>
-          <h1>Both sides commit.<br />Trust is programmable.</h1>
-          <p className="lead">
-            CommitPass protects scarce appointments with two-sided refundable USDC commitments.
-            Customers compensate providers when they no-show. Providers compensate customers when
-            they cancel late.
+      <section className="homeHero shell" id="top">
+        <div className="homeHeroCopy">
+          <p className="eyebrow">
+            PROGRAMMABLE RESERVATION PROTECTION
           </p>
-          <div className="heroActions">
-            <a className="button primary" href="#create">Create a commitment</a>
-            <a className="button secondary" href="#manage">Manage reservation</a>
-          </div>
+
+          <h1>
+            Both sides commit.
+            <br />
+            Trust is programmable.
+          </h1>
+
+          <p className="lead">
+            CommitPass protects scarce appointments with
+            two-sided refundable USDC commitments. Honest
+            participation returns both commitments. A no-show
+            compensates the party that kept the reservation.
+          </p>
+
           <div className="proofRow">
-            <span>USDC commitments</span><span>Conditional settlement</span><span>Built on Arc</span>
+            <span>4 verified outcomes</span>
+            <span>11 passing contract tests</span>
+            <span>Settled on Arc</span>
           </div>
         </div>
-        <div className="heroVisual card">
-          <Image
-            src="/commitpass-cover.png"
-            alt="CommitPass two-sided programmable commitments"
-            width={720}
-            height={720}
-            priority
-          />
+
+        <div className="actionChooser card">
+          <p className="eyebrow">CHOOSE YOUR TASK</p>
+
+          <h2>What do you need to do?</h2>
+
+          <p className="chooserLead">
+            CommitPass shows only the flow relevant to your
+            current task.
+          </p>
+
+          <div className="homeTaskGrid">
+            <Link
+              className="homeTaskCard homeTaskPrimary"
+              href="/create"
+            >
+              <span className="taskRole">Provider</span>
+              <h3>Create a reservation</h3>
+              <p>
+                Set the terms, lock the provider commitment and
+                send the invitation link.
+              </p>
+              <strong>Start provider flow</strong>
+            </Link>
+
+            <Link
+              className="homeTaskCard"
+              href="/reservation"
+            >
+              <span className="taskRole">
+                Customer or provider
+              </span>
+              <h3>Open a reservation</h3>
+              <p>
+                Use an invitation link or enter the onchain
+                reservation ID to continue.
+              </p>
+              <strong>Open reservation console</strong>
+            </Link>
+          </div>
         </div>
       </section>
 
-      <section className="shell section">
-        <div className="sectionHead">
-          <p className="eyebrow">WHY IT EXISTS</p>
-          <h2>A neutral settlement layer for time that cannot be recovered.</h2>
+      <section className="shell compactSection" id="how">
+        <div className="sectionHead compactSectionHead">
+          <p className="eyebrow">HOW IT WORKS</p>
+          <h2>
+            One reservation. Three clear stages.
+          </h2>
         </div>
-        <div className="outcomeGrid">
-          {outcomes.map(([title, description], index) => (
-            <article className="outcomeCard" key={title}>
-              <span className="stepNumber">0{index + 1}</span>
-              <h3>{title}</h3>
-              <p>{description}</p>
+
+        <div className="flowSteps">
+          {steps.map((step) => (
+            <article className="flowStep" key={step.number}>
+              <span>{step.number}</span>
+              <h3>{step.title}</h3>
+              <p>{step.description}</p>
             </article>
           ))}
         </div>
       </section>
 
-      <VerifiedScenarios />
-
-      <section className="shell workbench" id="create">
-        <div className="workbenchIntro">
-          <p className="eyebrow">PROVIDER FLOW</p>
-          <h2>Create a two-sided commitment.</h2>
-          <p>
-            The provider locks a performance bond first. The invited customer then accepts and
-            locks their smaller refundable commitment.
-          </p>
-        </div>
-        <CreateReservationForm />
-      </section>
-
-      <section className="shell workbench reverse" id="manage">
-        <ManageReservation />
-        <div className="workbenchIntro">
-          <p className="eyebrow">RESOLUTION FLOW</p>
-          <h2>Resolve the reservation transparently.</h2>
-          <p>
-            Confirm attendance, cancel in time, open a no-show claim or dispute a false claim. Every
-            outcome follows rules visible before funds are locked.
-          </p>
-        </div>
-      </section>
-
-      <footer className="shell footer">
+      <section className="shell proofCta card">
         <div>
-          <strong>CommitPass</strong>
-          <p>Built by Atakan Gündallı for the Programmable Money Hackathon.</p>
+          <p className="eyebrow">VERIFIED ON ARC TESTNET</p>
+          <h2>Four outcomes. Independently verifiable.</h2>
+          <p>
+            Inspect completed cancellation, attendance and
+            no-show scenarios with their recorded Arcscan
+            transactions.
+          </p>
         </div>
-        <div className="footerLinks">
-          <a href="/reservation">Open reservation</a>
-          <a href="https://github.com/AtakanGs" target="_blank" rel="noreferrer">GitHub</a>
-          <a href="https://testnet.arcscan.app" target="_blank" rel="noreferrer">Arcscan</a>
-        </div>
-      </footer>
+
+        <Link className="button secondary" href="/proof">
+          View verified proof
+        </Link>
+      </section>
+
+      <SiteFooter />
     </main>
   );
 }
