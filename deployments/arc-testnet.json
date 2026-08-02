@@ -19,7 +19,27 @@
     "nextReservationId": 1,
     "independentlyVerifiedAt": "2026-08-02"
   },
-  "verifiedFlows": [],
+  "verifiedFlows": [
+    {
+      "scenario": "Customer-initiated early cancellation after acceptance",
+      "reservationId": 1,
+      "metadataTitle": "V2 early cancellation proof",
+      "providerCommitment": "5 USDC",
+      "customerCommitment": "2 USDC",
+      "providerCompensation": "2 USDC",
+      "creationTransaction": "0x22733786a284ab45b31aeeeb9087c9ecd312be254cc4e0400d46e8aae6207616",
+      "acceptanceTransaction": "0xa03497be11ad0a2987d3e1873e314c4b8d54cb5480cbe2dda7abea5c74629246",
+      "cancellationTransaction": "0x7d5d87eba00c0189d2b05ad6a3db02802c03f409e3cd1dde29bdd16132485e75",
+      "cancelledBy": "0x9e0c85CbF38CE6394192F10B3Aff6A4d8dE25E96",
+      "providerRefund": "5 USDC",
+      "customerRefund": "2 USDC",
+      "finalStatus": "Cancelled",
+      "finalOutcome": "RefundBoth",
+      "contractBalanceAfterSettlement": "0 USDC",
+      "independentlyVerified": true,
+      "verifiedAt": "2026-08-02"
+    }
+  ],
   "legacyDeployments": [
     {
       "version": "v1",

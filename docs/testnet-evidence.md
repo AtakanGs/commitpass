@@ -17,6 +17,34 @@ CommitPass has been tested end to end using separate provider and customer walle
 
 The v2 contract requires a no-show claimant to have confirmed their own attendance during the valid check-in window. The arbiter is also separated from the provider and customer wallets.
 
+## Verified v2 flow 1: Early cancellation
+
+Reservation `#1` completed the following hardened v2 flow:
+
+```text
+Provider creates and funds the reservation
+-> Customer accepts and funds the customer commitment
+-> Customer cancels within the free-cancellation window
+-> The contract returns both commitments
+```
+
+### Onchain transactions
+
+- Reservation created: https://testnet.arcscan.app/tx/0x22733786a284ab45b31aeeeb9087c9ecd312be254cc4e0400d46e8aae6207616
+- Customer accepted: https://testnet.arcscan.app/tx/0xa03497be11ad0a2987d3e1873e314c4b8d54cb5480cbe2dda7abea5c74629246
+- Customer cancelled: https://testnet.arcscan.app/tx/0x7d5d87eba00c0189d2b05ad6a3db02802c03f409e3cd1dde29bdd16132485e75
+
+### Final state
+
+- Status: `Cancelled`
+- Outcome: `RefundBoth`
+- Provider refund: `5 USDC`
+- Customer refund: `2 USDC`
+- Contract balance after settlement: `0 USDC`
+- Metadata title: `V2 early cancellation proof`
+
+The complete lifecycle was independently checked against the v2 contract state, CommitPass events and USDC `Transfer` logs.
+
 ## Legacy deployment evidence: v1
 
 The four completed scenarios below were executed against the original v1 deployment:
