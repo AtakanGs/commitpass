@@ -240,9 +240,12 @@ export function ManageReservation({
     } else if (isCheckInOpen) {
       actionHint =
         "The check-in window is open. Confirm attendance now.";
+    } else if (!connectedPartyConfirmed) {
+      actionHint =
+        "The check-in window has closed. You cannot open a no-show claim because your attendance was not confirmed.";
     } else {
       actionHint =
-        "The check-in window has closed. An eligible party may open a no-show claim.";
+        "The check-in window has closed. You may open a no-show claim if the other party did not confirm attendance.";
     }
   } else if (status === 3 && isParticipant) {
     actionHint = nowSeconds <= claimDeadline
@@ -631,6 +634,7 @@ export function ManageReservation({
             disabled={
               busy ||
               !isNoShowOpen ||
+              !reservation?.providerConfirmed ||
               reservation?.customerConfirmed
             }
           >
@@ -650,6 +654,7 @@ export function ManageReservation({
             disabled={
               busy ||
               !isNoShowOpen ||
+              !reservation?.customerConfirmed ||
               reservation?.providerConfirmed
             }
           >

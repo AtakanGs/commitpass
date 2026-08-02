@@ -62,6 +62,7 @@ contract MutualCommitmentEscrow is ReentrancyGuard {
     error TooEarly();
     error TooLate();
     error InvalidOutcome();
+    error AttendanceNotConfirmed();
 
     event ReservationCreated(
         uint256 indexed reservationId,
@@ -227,9 +228,11 @@ contract MutualCommitmentEscrow is ReentrancyGuard {
         if (outcome == Outcome.CustomerNoShow) {
             if (msg.sender != reservation.provider) revert Unauthorized();
             if (reservation.customerConfirmed) revert InvalidOutcome();
+            if (!reservation.providerConfirmed) revert AttendanceNotConfirmed();
         } else if (outcome == Outcome.ProviderNoShow) {
             if (msg.sender != reservation.customer) revert Unauthorized();
             if (reservation.providerConfirmed) revert InvalidOutcome();
+            if (!reservation.customerConfirmed) revert AttendanceNotConfirmed();
         } else {
             revert InvalidOutcome();
         }

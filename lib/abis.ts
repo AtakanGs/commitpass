@@ -28,6 +28,11 @@ export const commitmentEscrowAbi = [
   { type: "error", name: "TooLate", inputs: [] },
   { type: "error", name: "InvalidOutcome", inputs: [] },
   {
+    type: "error",
+    name: "AttendanceNotConfirmed",
+    inputs: [],
+  },
+  {
     type: "event",
     name: "ReservationCreated",
     inputs: [

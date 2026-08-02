@@ -103,6 +103,9 @@ describe("MutualCommitmentEscrow", function () {
   it("compensates the provider after an undisputed customer no-show", async function () {
     const ctx = await deployFixture();
     const timing = await createAndAccept(ctx);
+
+    await increaseTo(timing.startTime - timing.gracePeriod);
+    await ctx.escrow.connect(ctx.provider).confirmAttendance(1);
     await increaseTo(timing.startTime + timing.gracePeriod + 1);
 
     await ctx.escrow.connect(ctx.provider).openNoShowClaim(1, 2);
@@ -120,6 +123,9 @@ describe("MutualCommitmentEscrow", function () {
   it("refunds the customer and pays compensation after a provider no-show", async function () {
     const ctx = await deployFixture();
     const timing = await createAndAccept(ctx);
+
+    await increaseTo(timing.startTime - timing.gracePeriod);
+    await ctx.escrow.connect(ctx.customer).confirmAttendance(1);
     await increaseTo(timing.startTime + timing.gracePeriod + 1);
 
     await ctx.escrow.connect(ctx.customer).openNoShowClaim(1, 3);
@@ -137,6 +143,9 @@ describe("MutualCommitmentEscrow", function () {
   it("lets the arbiter resolve a disputed claim", async function () {
     const ctx = await deployFixture();
     const timing = await createAndAccept(ctx);
+
+    await increaseTo(timing.startTime - timing.gracePeriod);
+    await ctx.escrow.connect(ctx.provider).confirmAttendance(1);
     await increaseTo(timing.startTime + timing.gracePeriod + 1);
 
     await ctx.escrow.connect(ctx.provider).openNoShowClaim(1, 2);
@@ -184,6 +193,60 @@ describe("MutualCommitmentEscrow", function () {
       reverted = String(error).includes("TooEarly");
     }
     expect(reverted).to.equal(true);
+  });
+
+  it("requires provider attendance before a customer no-show claim", async function () {
+    const ctx = await deployFixture();
+    const timing = await createAndAccept(ctx);
+
+    await increaseTo(timing.startTime + timing.gracePeriod + 1);
+
+    let reverted = false;
+
+    try {
+      await ctx.escrow
+        .connect(ctx.provider)
+        .openNoShowClaim(1, 2);
+    } catch (error) {
+      reverted = String(error).includes(
+        "AttendanceNotConfirmed",
+      );
+    }
+
+    expect(reverted).to.equal(true);
+
+    const reservation =
+      await ctx.escrow.getReservation(1);
+
+    expect(reservation.status).to.equal(2n);
+    expect(reservation.pendingOutcome).to.equal(0n);
+  });
+
+  it("requires customer attendance before a provider no-show claim", async function () {
+    const ctx = await deployFixture();
+    const timing = await createAndAccept(ctx);
+
+    await increaseTo(timing.startTime + timing.gracePeriod + 1);
+
+    let reverted = false;
+
+    try {
+      await ctx.escrow
+        .connect(ctx.customer)
+        .openNoShowClaim(1, 3);
+    } catch (error) {
+      reverted = String(error).includes(
+        "AttendanceNotConfirmed",
+      );
+    }
+
+    expect(reverted).to.equal(true);
+
+    const reservation =
+      await ctx.escrow.getReservation(1);
+
+    expect(reservation.status).to.equal(2n);
+    expect(reservation.pendingOutcome).to.equal(0n);
   });
 
   it("rejects a no-show claim against a party that already confirmed", async function () {

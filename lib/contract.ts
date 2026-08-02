@@ -79,6 +79,10 @@ export function explainContractError(caught: unknown) {
     return "This action is not available in the reservation's current state.";
   }
 
+  if (/AttendanceNotConfirmed/i.test(message)) {
+    return "Confirm your own attendance during the check-in window before opening a no-show claim.";
+  }
+
   if (/InvalidOutcome/i.test(message)) {
     return "The selected outcome is not valid for this reservation.";
   }
