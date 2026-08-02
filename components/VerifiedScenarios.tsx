@@ -1,123 +1,104 @@
 import { VERIFIED_SCENARIOS } from "@/lib/verifiedScenarios";
 
-const ARCSCAN_TX = "https://testnet.arcscan.app/tx/";
+const EVIDENCE_URL =
+  "https://github.com/AtakanGs/commitpass/blob/main/docs/testnet-evidence.md";
+
+const PUBLIC_SCENARIOS = [
+  {
+    reservationId: 1,
+    title: "Cancelled in time",
+    result: "Both refunded",
+    summary:
+      "The customer cancelled before the deadline, so both deposits were returned.",
+    funds: "Provider: 5 USDC · Customer: 2 USDC",
+    evidence:
+      EVIDENCE_URL +
+      "#verified-v2-flow-1-early-cancellation",
+  },
+  {
+    reservationId: 2,
+    title: "Both showed up",
+    result: "Both refunded",
+    summary:
+      "Both parties confirmed attendance, so both deposits were returned automatically.",
+    funds: "Provider: 5 USDC · Customer: 2 USDC",
+    evidence:
+      EVIDENCE_URL +
+      "#verified-v2-flow-2-mutual-attendance",
+  },
+  {
+    reservationId: 3,
+    title: "Customer did not show",
+    result: "Provider compensated",
+    summary:
+      "The provider checked in, the customer did not, and the provider was compensated.",
+    funds: "Provider: 7 USDC · Customer: 0 USDC",
+    evidence:
+      EVIDENCE_URL +
+      "#verified-v2-flow-3-hardened-customer-no-show",
+  },
+] as const;
+
+const CURRENT_IDS = new Set(
+  VERIFIED_SCENARIOS.filter(
+    (scenario) => scenario.deployment === "v2",
+  ).map((scenario) => scenario.reservationId),
+);
 
 export function VerifiedScenarios() {
+  const scenarios = PUBLIC_SCENARIOS.filter(
+    (scenario) => CURRENT_IDS.has(scenario.reservationId),
+  );
+
   return (
     <section
       className="shell section proofSection"
       id="proof"
     >
       <div className="sectionHead proofSectionHead">
-        <div>
-          <p className="eyebrow">
-            VERIFIED ON ARC TESTNET
-          </p>
-          <h2>
-            Verified outcomes across hardened v2 and legacy v1.
-          </h2>
-        </div>
-
+        <p className="eyebrow">TESTED ON ARC</p>
+        <h2>See what happens to the funds.</h2>
         <p>
-          Current hardened v2 evidence is shown alongside
-          historical v1 examples. Every reservation is scoped by
-          its contract deployment, so repeated reservation IDs
-          cannot be mixed.
+          Each example shows the final payout after a
+          cancellation, completed visit, or no-show.
         </p>
       </div>
 
       <div className="verifiedGrid">
-        {VERIFIED_SCENARIOS.map((scenario, index) => (
+        {scenarios.map((scenario) => (
           <article
             className="verifiedCard card"
-            key={
-              scenario.contractAddress +
-              "-" +
-              scenario.reservationId
-            }
+            key={scenario.reservationId}
           >
-            <div className="verifiedTopline">
-              <span>
-                SCENARIO{" "}
-                {String(index + 1).padStart(2, "0")} |{" "}
-                {scenario.eyebrow}
-              </span>
-
-              <span className="verifiedBadge">
-                {scenario.deployment === "v2"
-                  ? "Hardened v2"
-                  : "Legacy v1"}
-              </span>
-            </div>
-
             <div className="verifiedIdentity">
-              <span>
-                {scenario.deployment.toUpperCase()} reservation #
-                {scenario.reservationId}
-              </span>
               <h3>{scenario.title}</h3>
-            </div>
-
-            <div className="verifiedState">
-              <div>
-                <span>Status</span>
-                <strong>{scenario.status}</strong>
-              </div>
-
-              <div>
-                <span>Outcome</span>
-                <strong>{scenario.outcome}</strong>
-              </div>
             </div>
 
             <p className="verifiedSummary">
               {scenario.summary}
             </p>
 
-            <div className="verifiedSettlement">
-              <span>Final settlement</span>
-              <strong>{scenario.settlement}</strong>
+            <div className="verifiedState">
+              <div>
+                <span>Result</span>
+                <strong>{scenario.result}</strong>
+              </div>
             </div>
 
-            <div className="verifiedMeta">
-              <span>
-                {scenario.activities.length} onchain steps
-              </span>
-              <span>{scenario.verifiedAt}</span>
+            <div className="verifiedSettlement">
+              <span>Funds</span>
+              <strong>{scenario.funds}</strong>
             </div>
 
             <div className="verifiedActions">
               <a
-                className="button secondary"
-                href="https://github.com/AtakanGs/commitpass/blob/main/docs/testnet-evidence.md"
+                className="button secondary full"
+                href={scenario.evidence}
                 target="_blank"
                 rel="noreferrer"
               >
-                Evidence record
+                View proof
               </a>
-
-              {scenario.finalTransaction ? (
-                <a
-                  className="textLink"
-                  href={
-                    ARCSCAN_TX +
-                    scenario.finalTransaction
-                  }
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Final transaction
-                </a>
-              ) : (
-                <a
-                  className="textLink"
-                  href="https://github.com/AtakanGs/commitpass/blob/main/docs/testnet-evidence.md"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Evidence record
-                </a>
-              )}
             </div>
           </article>
         ))}

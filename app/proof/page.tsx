@@ -4,9 +4,9 @@ import { SiteNav } from "@/components/SiteNav";
 import { VerifiedScenarios } from "@/components/VerifiedScenarios";
 
 export const metadata: Metadata = {
-  title: "Verified proof | CommitPass",
+  title: "Verified outcomes | CommitPass",
   description:
-    "Inspect completed CommitPass settlement outcomes on Arc Testnet.",
+    "See how CommitPass pays out funds after cancellations, completed visits, and no-shows.",
 };
 
 export default function ProofPage() {
