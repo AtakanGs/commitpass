@@ -6,7 +6,7 @@ export function SiteFooter() {
       <div>
         <strong>CommitPass</strong>
         <p>
-          Built by Atakan G?ndall? for the Programmable Money
+          Built by {"Atakan G\u00fcndall\u0131"} for the Programmable Money
           Hackathon.
         </p>
       </div>
