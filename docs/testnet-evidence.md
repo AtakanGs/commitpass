@@ -98,4 +98,45 @@ Provider creates reservation
 
 This flow demonstrates CommitPass's optimistic dispute mechanism. A no-show claim can be challenged by the accused party during the dispute window. Because Reservation `#5` was not disputed, the pending customer no-show outcome became final after the deadline.
 
-Evidence last updated on 31 July 2026.
+## Verified flow 4: Undisputed provider no-show claim
+
+Reservation `#7` completed the following optimistic claim flow:
+
+```text
+Provider creates reservation
+-> Customer accepts
+-> Both USDC commitments are locked
+-> Customer confirms attendance during the check-in window
+-> Provider does not confirm attendance
+-> Customer opens a provider no-show claim after the check-in window closes
+-> Provider does not dispute within the 12-hour dispute window
+-> Customer finalizes the undisputed claim
+-> Customer receives the 2 USDC customer commitment plus 2 USDC compensation
+-> Provider receives the remaining 3 USDC of the provider commitment
+```
+
+### Onchain transactions
+
+- Reservation created: https://testnet.arcscan.app/tx/0xf7a45f6c39e96c7851b6a9ffad0cae93906863d3f6aab13eef274188f9ad175e
+- Customer accepted: https://testnet.arcscan.app/tx/0xd55ff5e10dd421fac0410bbb00a6a66fa14c21c8ef3a2e9e179798b8345868f1
+- Customer confirmed attendance: https://testnet.arcscan.app/tx/0xde8f715a1eb15217b927fac826fa7ba9d795f27c130786e850092fcaa0b15083
+- Provider no-show claim opened: https://testnet.arcscan.app/tx/0xfadd86cca5f776d55a37632f50cf5f31f5f743a7ae8511c69d8c51247ba8f787
+- Undisputed claim finalized: https://testnet.arcscan.app/tx/0xcafd717d69f7f03531b28b58a22782260557903529a774ae0d53e8adbc9da3ea
+
+### Final state
+
+- Status: `Resolved`
+- Outcome: `ProviderNoShow`
+- Provider commitment: `5 USDC`
+- Customer commitment: `2 USDC`
+- Provider compensation: `2 USDC`
+- Provider settlement: `3 USDC`
+- Customer settlement: `4 USDC`
+- Provider attendance: `Pending`
+- Customer attendance: `Confirmed`
+- Dispute deadline: `1 August 2026, 12:45:40 Europe/Istanbul`
+- Check-in reference: `CP-000007`
+
+This is the strongest live no-show proof in the current evidence set because the claimant confirmed attendance during the valid check-in window before opening the provider no-show claim.
+
+Evidence last updated on 2 August 2026.

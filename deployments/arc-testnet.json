@@ -48,6 +48,26 @@
       "finalStatus": "Resolved",
       "finalOutcome": "CustomerNoShow",
       "verifiedAt": "2026-07-31"
+    },
+    {
+      "scenario": "Undisputed provider no-show claim with customer attendance",
+      "reservationId": 7,
+      "providerCommitment": "5 USDC",
+      "customerCommitment": "2 USDC",
+      "providerCompensation": "2 USDC",
+      "creationTransaction": "0xf7a45f6c39e96c7851b6a9ffad0cae93906863d3f6aab13eef274188f9ad175e",
+      "acceptanceTransaction": "0xd55ff5e10dd421fac0410bbb00a6a66fa14c21c8ef3a2e9e179798b8345868f1",
+      "customerAttendanceTransaction": "0xde8f715a1eb15217b927fac826fa7ba9d795f27c130786e850092fcaa0b15083",
+      "claimTransaction": "0xfadd86cca5f776d55a37632f50cf5f31f5f743a7ae8511c69d8c51247ba8f787",
+      "resolutionTransaction": "0xcafd717d69f7f03531b28b58a22782260557903529a774ae0d53e8adbc9da3ea",
+      "providerAttendance": false,
+      "customerAttendance": true,
+      "disputeDeadline": "2026-08-01T09:45:40Z",
+      "providerSettlement": "3 USDC",
+      "customerSettlement": "4 USDC",
+      "finalStatus": "Resolved",
+      "finalOutcome": "ProviderNoShow",
+      "verifiedAt": "2026-08-02"
     }
   ]
 }

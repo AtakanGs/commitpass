@@ -132,6 +132,56 @@ export const VERIFIED_SCENARIOS: VerifiedScenario[] = [
       },
     ],
   },
+  {
+    reservationId: 7,
+    eyebrow: "PROVIDER NO-SHOW",
+    title: "Customer protected",
+    status: "Resolved",
+    outcome: "Provider no-show",
+    summary:
+      "The customer confirmed attendance, the provider did not check in and the undisputed claim compensated the customer from the provider bond.",
+    settlement: "Provider 3 USDC | Customer 4 USDC",
+    verifiedAt: "2 August 2026",
+    finalTransaction:
+      "0xcafd717d69f7f03531b28b58a22782260557903529a774ae0d53e8adbc9da3ea",
+    activities: [
+      {
+        label: "Reservation created",
+        description:
+          "The provider locked the 5 USDC performance bond.",
+        transactionHash:
+          "0xf7a45f6c39e96c7851b6a9ffad0cae93906863d3f6aab13eef274188f9ad175e",
+      },
+      {
+        label: "Customer accepted",
+        description:
+          "The customer locked the 2 USDC commitment.",
+        transactionHash:
+          "0xd55ff5e10dd421fac0410bbb00a6a66fa14c21c8ef3a2e9e179798b8345868f1",
+      },
+      {
+        label: "Customer checked in",
+        description:
+          "The customer confirmed attendance during the valid window.",
+        transactionHash:
+          "0xde8f715a1eb15217b927fac826fa7ba9d795f27c130786e850092fcaa0b15083",
+      },
+      {
+        label: "Provider no-show claim opened",
+        description:
+          "The customer claimed that the provider did not attend.",
+        transactionHash:
+          "0xfadd86cca5f776d55a37632f50cf5f31f5f743a7ae8511c69d8c51247ba8f787",
+      },
+      {
+        label: "Claim finalized",
+        description:
+          "The customer received 4 USDC and the provider received the remaining 3 USDC.",
+        transactionHash:
+          "0xcafd717d69f7f03531b28b58a22782260557903529a774ae0d53e8adbc9da3ea",
+      },
+    ],
+  },
 ];
 
 export function getVerifiedScenario(
