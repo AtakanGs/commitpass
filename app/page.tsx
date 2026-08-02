@@ -46,12 +46,6 @@ export default function Home() {
             participation returns both commitments. A no-show
             compensates the party that kept the reservation.
           </p>
-
-          <div className="proofRow">
-            <span>4 verified outcomes</span>
-            <span>11 passing contract tests</span>
-            <span>Settled on Arc</span>
-          </div>
         </div>
 
         <div className="actionChooser card">
