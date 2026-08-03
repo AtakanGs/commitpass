@@ -10,7 +10,9 @@ import {
   formatUsdc,
   openNoShowClaim,
   OUTCOME_LABELS,
+  readArbiter,
   readReservation,
+  resolveDispute,
   STATUS_LABELS,
   writeSimple,
 } from "@/lib/contract";
@@ -53,6 +55,7 @@ export function ManageReservation({
   const [reservation, setReservation] =
     useState<Awaited<ReturnType<typeof readReservation>>>();
   const [account, setAccount] = useState<Address>();
+  const [arbiter, setArbiter] = useState<Address>();
   const [message, setMessage] = useState<string>();
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -121,10 +124,15 @@ export function ManageReservation({
     setId(targetId);
 
     try {
-      const value = await readReservation(BigInt(targetId));
-      const connectedAccount = await getConnectedAccount();
+      const [value, configuredArbiter, connectedAccount] =
+        await Promise.all([
+          readReservation(BigInt(targetId)),
+          readArbiter(),
+          getConnectedAccount(),
+        ]);
 
       setReservation(value);
+      setArbiter(configuredArbiter);
       setAccount(connectedAccount);
       setMessage(undefined);
       setNow(Date.now());
@@ -169,6 +177,7 @@ export function ManageReservation({
     account,
     reservation?.customer,
   );
+  const isArbiter = sameAddress(account, arbiter);
   const isParticipant = isProvider || isCustomer;
 
   const startTime = reservation
@@ -214,7 +223,7 @@ export function ManageReservation({
 
   let roleLabel = "Wallet not connected";
   let roleDescription =
-    "Connect a wallet and reload the reservation to see your available actions.";
+    "Connect the provider, customer, or arbiter wallet and reload the reservation to see available actions.";
 
   if (account && isProvider) {
     roleLabel = "Provider";
@@ -224,20 +233,29 @@ export function ManageReservation({
     roleLabel = "Customer";
     roleDescription =
       "You were invited to this reservation and supplied the customer commitment.";
+  } else if (account && isArbiter) {
+    roleLabel = "Arbiter";
+    roleDescription =
+      "You may resolve a disputed claim by selecting its final onchain outcome.";
   } else if (account) {
     roleLabel = "Observer";
     roleDescription =
-      "This wallet is not a participant in the loaded reservation.";
+      "This wallet is not a participant or the arbiter for the loaded reservation.";
   }
 
   let actionHint: string | undefined;
 
   if (reservation && !account) {
     actionHint =
-      "Connect the provider or customer wallet to manage this reservation.";
-  } else if (reservation && account && !isParticipant) {
+      "Connect the provider, customer, or arbiter wallet to manage this reservation.";
+  } else if (
+    reservation &&
+    account &&
+    !isParticipant &&
+    !isArbiter
+  ) {
     actionHint =
-      "Observers can inspect the reservation, but only its participants can act.";
+      "Observers can inspect the reservation, but only its participants or arbiter can act.";
   } else if (status === 1 && isCustomer) {
     actionHint = isBeforeCancellationDeadline
       ? "Accept before the free-cancellation deadline to activate the reservation."
@@ -269,6 +287,9 @@ export function ManageReservation({
     actionHint = nowSeconds <= claimDeadline
       ? "The no-show claim is inside its dispute window."
       : "The dispute window has ended. The pending claim can now be finalized.";
+  } else if (status === 4 && isArbiter) {
+    actionHint =
+      "Select the final outcome carefully. Arbiter resolution settles the funds immediately and cannot be reversed.";
   } else if (status === 4) {
     actionHint =
       "The claim is disputed and is awaiting arbiter resolution.";
@@ -720,6 +741,58 @@ export function ManageReservation({
           >
             Finalize undisputed claim
           </button>
+        ) : null}
+
+        {status === 4 && isArbiter ? (
+          <>
+            <button
+              onClick={() =>
+                run(
+                  "Resolving with both commitments refunded",
+                  () => resolveDispute(reservationId, 4),
+                )
+              }
+              disabled={busy}
+            >
+              Resolve: refund both
+            </button>
+
+            <button
+              onClick={() =>
+                run(
+                  "Resolving as customer no-show",
+                  () => resolveDispute(reservationId, 2),
+                )
+              }
+              disabled={busy}
+            >
+              Resolve: customer no-show
+            </button>
+
+            <button
+              onClick={() =>
+                run(
+                  "Resolving as provider no-show",
+                  () => resolveDispute(reservationId, 3),
+                )
+              }
+              disabled={busy}
+            >
+              Resolve: provider no-show
+            </button>
+
+            <button
+              onClick={() =>
+                run(
+                  "Resolving as completed",
+                  () => resolveDispute(reservationId, 1),
+                )
+              }
+              disabled={busy}
+            >
+              Resolve: completed
+            </button>
+          </>
         ) : null}
       </div>
 

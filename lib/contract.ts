@@ -189,6 +189,14 @@ export async function readReservation(id: bigint) {
   });
 }
 
+export async function readArbiter(): Promise<Address> {
+  return arcPublicClient.readContract({
+    address: getContractAddress(),
+    abi: commitmentEscrowAbi,
+    functionName: "arbiter",
+  });
+}
+
 export async function acceptReservation(id: bigint) {
   const reservation = await readReservation(id);
   await approveCommitment(reservation.customerCommitment);
@@ -225,6 +233,23 @@ export async function openNoShowClaim(id: bigint, outcome: 2 | 3) {
     address: getContractAddress(),
     abi: commitmentEscrowAbi,
     functionName: "openNoShowClaim",
+    args: [id, outcome],
+  });
+  const hash = await walletClient.writeContract(request);
+  await publicClient.waitForTransactionReceipt({ hash });
+  return hash;
+}
+
+export async function resolveDispute(
+  id: bigint,
+  outcome: 1 | 2 | 3 | 4,
+) {
+  const { account, walletClient, publicClient } = await connectWallet();
+  const { request } = await publicClient.simulateContract({
+    account,
+    address: getContractAddress(),
+    abi: commitmentEscrowAbi,
+    functionName: "resolveDispute",
     args: [id, outcome],
   });
   const hash = await walletClient.writeContract(request);

@@ -139,6 +139,23 @@ export const commitmentEscrowAbi = [
   },
   {
     type: "function",
+    name: "arbiter",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "address" }],
+  },
+  {
+    type: "function",
+    name: "resolveDispute",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "reservationId", type: "uint256" },
+      { name: "outcome", type: "uint8" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
     name: "getReservation",
     stateMutability: "view",
     inputs: [{ name: "reservationId", type: "uint256" }],
