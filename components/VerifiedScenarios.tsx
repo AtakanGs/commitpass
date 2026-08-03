@@ -37,6 +37,17 @@ const PUBLIC_SCENARIOS = [
       EVIDENCE_URL +
       "#verified-v2-flow-3-hardened-customer-no-show",
   },
+  {
+    reservationId: 4,
+    title: "Provider did not show",
+    result: "Customer compensated",
+    summary:
+      "The customer checked in, the provider did not, and the customer was compensated.",
+    funds: "Provider: 3 USDC · Customer: 4 USDC",
+    evidence:
+      EVIDENCE_URL +
+      "#verified-v2-flow-4-provider-no-show",
+  },
 ] as const;
 
 const CURRENT_IDS = new Set(

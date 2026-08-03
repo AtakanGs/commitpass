@@ -161,6 +161,59 @@ export const VERIFIED_SCENARIOS: VerifiedScenario[] = [
     ],
   },
   {
+    deployment: "v2",
+    contractAddress: "0x8b28Ee06fD5d59d8886474733d7D3B58cDB33A5D",
+    reservationId: 4,
+    eyebrow: "HARDENED PROVIDER NO-SHOW",
+    title: "Customer protected by claimant attendance rule",
+    status: "Resolved",
+    outcome: "Provider no-show",
+    summary:
+      "The customer confirmed attendance during the valid check-in window. The provider did not check in, and the customer opened a no-show claim only after satisfying the claimant-attendance requirement.",
+    settlement:
+      "Provider 3 USDC | Customer 4 USDC",
+    verifiedAt: "3 August 2026",
+    finalTransaction:
+      "0x0b50671c05398e30243c7bea89de0954c646ffbe6478106492eded6bf3db69b8",
+    activities: [
+      {
+        label: "Reservation created",
+        description:
+          "The provider locked a 5 USDC commitment using salted metadata.",
+        transactionHash:
+          "0x795fa08b4dd1b046485bf254e7a346440ef0f2adb393f550fc16a48c0ae2b507",
+      },
+      {
+        label: "Customer accepted",
+        description:
+          "The customer locked a 2 USDC commitment.",
+        transactionHash:
+          "0xaef977e2805b6c7d8bbfbebdc2ffd51ab26abb8a433034ecc6f793171010d1c6",
+      },
+      {
+        label: "Customer checked in",
+        description:
+          "The customer confirmed attendance during the valid window.",
+        transactionHash:
+          "0xf791f4aeb72fc791f4ca146985a6b8045937c51ad1ab5530db35e8ac7cdaba42",
+      },
+      {
+        label: "Provider no-show claim opened",
+        description:
+          "The customer could open the claim only after its own attendance had been recorded.",
+        transactionHash:
+          "0x58a607abf977745525db8fb8053fac45591b66642f896ca08dd9be9bfa1ded8b",
+      },
+      {
+        label: "Undisputed claim finalized",
+        description:
+          "The customer received 4 USDC and the provider received the remaining 3 USDC.",
+        transactionHash:
+          "0x0b50671c05398e30243c7bea89de0954c646ffbe6478106492eded6bf3db69b8",
+      },
+    ],
+  },
+  {
     deployment: "v1",
     contractAddress: "0x02b02Cdb93B32a9bcDC9cb5904Cef2ABb2F7De6D",
     reservationId: 1,

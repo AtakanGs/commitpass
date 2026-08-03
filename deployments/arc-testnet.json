@@ -18,8 +18,11 @@
     "localArtifactBytecodeBytes": 8265,
     "independentlyVerifiedAt": "2026-08-02",
     "initialNextReservationId": 1,
-    "currentNextReservationId": 4,
-    "currentStateVerifiedAt": "2026-08-02"
+    "currentNextReservationId": 5,
+    "currentStateVerifiedAt": "2026-08-03",
+    "sourceVerified": true,
+    "sourceVerifiedAt": "2026-08-03",
+    "sourceVerificationUrl": "https://testnet.arcscan.app/address/0x8b28Ee06fD5d59d8886474733d7D3B58cDB33A5D?tab=contract"
   },
   "verifiedFlows": [
     {
@@ -85,6 +88,32 @@
       "contractBalanceAfterSettlement": "0 USDC",
       "independentlyVerified": true,
       "verifiedAt": "2026-08-02"
+    },
+    {
+      "scenario": "Hardened undisputed provider no-show claim with salted metadata",
+      "reservationId": 4,
+      "metadataTitle": "Provider no-show proof",
+      "metadataSalt": "0x0ae8fa6ae635a7cdbbb24c2e952728655866866da9fd4c37ca6ef6b0b911f4e2",
+      "metadataHash": "0x73dc7c92837784b2fa8e36e4bb1bc694751b24407326a93b6ca047019fc81a22",
+      "providerCommitment": "5 USDC",
+      "customerCommitment": "2 USDC",
+      "providerCompensation": "2 USDC",
+      "creationTransaction": "0x795fa08b4dd1b046485bf254e7a346440ef0f2adb393f550fc16a48c0ae2b507",
+      "acceptanceTransaction": "0xaef977e2805b6c7d8bbfbebdc2ffd51ab26abb8a433034ecc6f793171010d1c6",
+      "customerAttendanceTransaction": "0xf791f4aeb72fc791f4ca146985a6b8045937c51ad1ab5530db35e8ac7cdaba42",
+      "claimTransaction": "0x58a607abf977745525db8fb8053fac45591b66642f896ca08dd9be9bfa1ded8b",
+      "resolutionTransaction": "0x0b50671c05398e30243c7bea89de0954c646ffbe6478106492eded6bf3db69b8",
+      "claimant": "Customer",
+      "providerAttendance": false,
+      "customerAttendance": true,
+      "disputeDeadline": "2026-08-03T07:46:29Z",
+      "providerSettlement": "3 USDC",
+      "customerSettlement": "4 USDC",
+      "finalStatus": "Resolved",
+      "finalOutcome": "ProviderNoShow",
+      "contractBalanceAfterSettlement": "0 USDC",
+      "independentlyVerified": true,
+      "verifiedAt": "2026-08-03"
     }
   ],
   "legacyDeployments": [

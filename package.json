@@ -17,6 +17,7 @@
     "deploy:arc": "hardhat run scripts/deploy.cjs --network arcTestnet",
     "verify:arcscan": "node scripts/check-arcscan-verification.cjs",
     "verify:arcscan:source": "node scripts/verify-arcscan-source.cjs",
+    "verify:flow:provider-no-show": "node scripts/verify-reservation-4-provider-no-show.cjs",
     "ci": "npm run contracts:compile && npm run contracts:test && npm run typecheck && npm run build"
   },
   "dependencies": {

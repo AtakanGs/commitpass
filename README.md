@@ -8,9 +8,11 @@
 - Network: Arc Testnet
 - Current contract (v2): `0x8b28Ee06fD5d59d8886474733d7D3B58cDB33A5D`
 - Deployment transaction: https://testnet.arcscan.app/tx/0xddc6ecc2e13a2680e195fa35eeb83cf28ec39b7eb2219d618bab222a76da1acb
+- Verified source: https://testnet.arcscan.app/address/0x8b28Ee06fD5d59d8886474733d7D3B58cDB33A5D?tab=contract
 - Verified v2 flow: Reservation `#1` - customer acceptance followed by early cancellation and full refunds
 - Verified v2 flow: Reservation `#2` - mutual attendance followed by automatic settlement and full refunds
 - Verified v2 flow: Reservation `#3` - claimant attendance followed by an undisputed customer no-show settlement
+- Verified v2 flow: Reservation `#4` - customer attendance followed by an undisputed provider no-show settlement
 - Legacy v1 verified flows: Reservation `#1` - early cancellation; Reservation `#3` - mutual attendance; Reservation `#5` - customer no-show settlement; Reservation `#7` - customer-confirmed provider no-show settlement
 - Testnet evidence: [docs/testnet-evidence.md](docs/testnet-evidence.md)
 

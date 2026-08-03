@@ -13,7 +13,9 @@ CommitPass has been tested end to end using separate provider and customer walle
 - Dedicated arbiter: `0x31B7Be1e0d05BA7866f03a4Dc6244e34D9191e29`
 - Runtime bytecode: `8265 bytes`
 - Initial reservation ID: `1`
-- Independently verified: `2 August 2026`
+- Current next reservation ID: `5`
+- Contract source verified on Arcscan: `3 August 2026`
+- Independently verified: `3 August 2026`
 
 The v2 contract requires a no-show claimant to have confirmed their own attendance during the valid check-in window. The arbiter is also separated from the provider and customer wallets.
 
@@ -115,6 +117,46 @@ Provider creates and funds the reservation
 This flow directly verifies the hardened v2 rule: a provider cannot accuse the customer of a no-show unless the provider first recorded its own attendance during the valid check-in window.
 
 The complete lifecycle was independently checked against contract state, emitted CommitPass events, transaction senders, the dispute deadline and USDC `Transfer` logs.
+
+## Verified v2 flow 4: Provider no-show
+
+Reservation `#4` verifies the claimant-attendance rule from the customer side and uses the salted metadata format:
+
+```text
+Provider creates and funds the reservation
+-> Customer accepts and funds the customer commitment
+-> Customer confirms attendance during the valid check-in window
+-> Provider does not confirm attendance
+-> Customer opens a provider no-show claim
+-> Provider does not dispute within the configured window
+-> Customer finalizes the undisputed claim
+-> Customer receives its 2 USDC commitment plus 2 USDC compensation
+-> Provider receives the remaining 3 USDC
+```
+
+### Onchain transactions
+
+- Reservation created: https://testnet.arcscan.app/tx/0x795fa08b4dd1b046485bf254e7a346440ef0f2adb393f550fc16a48c0ae2b507
+- Customer accepted: https://testnet.arcscan.app/tx/0xaef977e2805b6c7d8bbfbebdc2ffd51ab26abb8a433034ecc6f793171010d1c6
+- Customer confirmed attendance: https://testnet.arcscan.app/tx/0xf791f4aeb72fc791f4ca146985a6b8045937c51ad1ab5530db35e8ac7cdaba42
+- Provider no-show claim opened: https://testnet.arcscan.app/tx/0x58a607abf977745525db8fb8053fac45591b66642f896ca08dd9be9bfa1ded8b
+- Undisputed claim finalized: https://testnet.arcscan.app/tx/0x0b50671c05398e30243c7bea89de0954c646ffbe6478106492eded6bf3db69b8
+
+### Final state
+
+- Status: `Resolved`
+- Outcome: `ProviderNoShow`
+- Provider attendance: `Pending`
+- Customer attendance: `Confirmed`
+- Provider settlement: `3 USDC`
+- Customer settlement: `4 USDC`
+- Contract balance after settlement: `0 USDC`
+- Dispute deadline: `3 August 2026, 10:46:29 Europe/Istanbul`
+- Metadata title: `Provider no-show proof`
+- Metadata salt: `0x0ae8fa6ae635a7cdbbb24c2e952728655866866da9fd4c37ca6ef6b0b911f4e2`
+- Metadata hash: `0x73dc7c92837784b2fa8e36e4bb1bc694751b24407326a93b6ca047019fc81a22`
+
+The lifecycle was independently checked against all five transaction receipts, participant addresses, contract state, salted metadata, USDC `Transfer` logs and the final zero contract balance.
 
 ## Legacy deployment evidence: v1
 
