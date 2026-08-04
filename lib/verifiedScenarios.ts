@@ -214,6 +214,66 @@ export const VERIFIED_SCENARIOS: VerifiedScenario[] = [
     ],
   },
   {
+    deployment: "v2",
+    contractAddress: "0x8b28Ee06fD5d59d8886474733d7D3B58cDB33A5D",
+    reservationId: 5,
+    eyebrow: "DISPUTED CLAIM",
+    title: "Customer challenged a no-show claim",
+    status: "Resolved",
+    outcome: "Refund both",
+    summary:
+      "The provider confirmed attendance and opened a customer no-show claim. The customer disputed the claim, and the dedicated arbiter resolved the case by returning both commitments.",
+    settlement:
+      "Provider 5 USDC | Customer 2 USDC returned",
+    verifiedAt: "4 August 2026",
+    finalTransaction:
+      "0x62d69165128f9ad4e9ff5a114c53b03d7f4098fccf20fe3059a20e6a35622723",
+    activities: [
+      {
+        label: "Reservation created",
+        description:
+          "The provider locked a 5 USDC commitment using salted metadata.",
+        transactionHash:
+          "0x621795a6e0e23913dcac65635dcd883b42b7a180d52c3e61ec3b73c2e7e67a80",
+      },
+      {
+        label: "Customer accepted",
+        description:
+          "The customer locked a 2 USDC commitment.",
+        transactionHash:
+          "0xa33fcaa3d6b3fff174d81060c4c7b160ac115b985d0f74bfe89dd1049d5ad57d",
+      },
+      {
+        label: "Provider checked in",
+        description:
+          "The provider confirmed attendance during the valid window.",
+        transactionHash:
+          "0x06554432a2b6d650f73ff2944d3e6c86af3615ac087a096195bb847dbd254dbb",
+      },
+      {
+        label: "Customer no-show claim opened",
+        description:
+          "The provider opened a claim after the check-in window closed.",
+        transactionHash:
+          "0x45b0c63c1f81f85294a0b8cd2d99d45651d98537850bfc1b9061b0f985946f97",
+      },
+      {
+        label: "Customer disputed the claim",
+        description:
+          "The customer challenged the pending no-show claim inside the dispute window.",
+        transactionHash:
+          "0xa0b8316063984ec1985e12f77d2abcee080a235b6240668622c35ef4c7b73583",
+      },
+      {
+        label: "Arbiter refunded both parties",
+        description:
+          "The dedicated arbiter selected RefundBoth, returning 5 USDC to the provider and 2 USDC to the customer.",
+        transactionHash:
+          "0x62d69165128f9ad4e9ff5a114c53b03d7f4098fccf20fe3059a20e6a35622723",
+      },
+    ],
+  },
+  {
     deployment: "v1",
     contractAddress: "0x02b02Cdb93B32a9bcDC9cb5904Cef2ABb2F7De6D",
     reservationId: 1,

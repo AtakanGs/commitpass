@@ -13,6 +13,7 @@
 - Verified v2 flow: Reservation `#2` - mutual attendance followed by automatic settlement and full refunds
 - Verified v2 flow: Reservation `#3` - claimant attendance followed by an undisputed customer no-show settlement
 - Verified v2 flow: Reservation `#4` - customer attendance followed by an undisputed provider no-show settlement
+- Verified v2 flow: Reservation `#5` - disputed customer no-show claim followed by dedicated arbiter resolution and full refunds
 - Legacy v1 verified flows: Reservation `#1` - early cancellation; Reservation `#3` - mutual attendance; Reservation `#5` - customer no-show settlement; Reservation `#7` - customer-confirmed provider no-show settlement
 - Testnet evidence: [docs/testnet-evidence.md](docs/testnet-evidence.md)
 

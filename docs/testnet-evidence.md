@@ -13,9 +13,9 @@ CommitPass has been tested end to end using separate provider and customer walle
 - Dedicated arbiter: `0x31B7Be1e0d05BA7866f03a4Dc6244e34D9191e29`
 - Runtime bytecode: `8265 bytes`
 - Initial reservation ID: `1`
-- Current next reservation ID: `5`
+- Current next reservation ID: `6`
 - Contract source verified on Arcscan: `3 August 2026`
-- Independently verified: `3 August 2026`
+- Independently verified: `4 August 2026`
 
 The v2 contract requires a no-show claimant to have confirmed their own attendance during the valid check-in window. The arbiter is also separated from the provider and customer wallets.
 
@@ -157,6 +157,50 @@ Provider creates and funds the reservation
 - Metadata hash: `0x73dc7c92837784b2fa8e36e4bb1bc694751b24407326a93b6ca047019fc81a22`
 
 The lifecycle was independently checked against all five transaction receipts, participant addresses, contract state, salted metadata, USDC `Transfer` logs and the final zero contract balance.
+
+## Verified v2 flow 5: Disputed claim and arbiter resolution
+
+Reservation `#5` verifies the complete challenge and arbitration path:
+
+```text
+Provider creates and funds the reservation
+-> Customer accepts and funds the customer commitment
+-> Provider confirms attendance during the valid check-in window
+-> Customer does not confirm attendance
+-> Provider opens a customer no-show claim
+-> Customer disputes the claim inside the dispute window
+-> The reservation enters Disputed status
+-> The dedicated arbiter selects RefundBoth
+-> Both original commitments return to their owners
+```
+
+### Onchain transactions
+
+- Reservation created: https://testnet.arcscan.app/tx/0x621795a6e0e23913dcac65635dcd883b42b7a180d52c3e61ec3b73c2e7e67a80
+- Customer accepted: https://testnet.arcscan.app/tx/0xa33fcaa3d6b3fff174d81060c4c7b160ac115b985d0f74bfe89dd1049d5ad57d
+- Provider confirmed attendance: https://testnet.arcscan.app/tx/0x06554432a2b6d650f73ff2944d3e6c86af3615ac087a096195bb847dbd254dbb
+- Customer no-show claim opened: https://testnet.arcscan.app/tx/0x45b0c63c1f81f85294a0b8cd2d99d45651d98537850bfc1b9061b0f985946f97
+- Customer disputed the claim: https://testnet.arcscan.app/tx/0xa0b8316063984ec1985e12f77d2abcee080a235b6240668622c35ef4c7b73583
+- Arbiter resolved with RefundBoth: https://testnet.arcscan.app/tx/0x62d69165128f9ad4e9ff5a114c53b03d7f4098fccf20fe3059a20e6a35622723
+
+### Final state
+
+- Status: `Resolved`
+- Outcome: `RefundBoth`
+- Claimant: `Provider`
+- Disputing party: `Customer`
+- Resolving wallet: `0x31B7Be1e0d05BA7866f03a4Dc6244e34D9191e29`
+- Provider attendance: `Confirmed`
+- Customer attendance: `Pending`
+- Provider settlement: `5 USDC`
+- Customer settlement: `2 USDC`
+- Contract balance after settlement: `0 USDC`
+- Original dispute deadline: `4 August 2026, 13:22:37 Europe/Istanbul`
+- Metadata title: `Disputed claim proof`
+- Metadata salt: `0xb17be86f112c764dc0081ebd1848c3d520a06781f4c463307cff98d36f62226f`
+- Metadata hash: `0x910f9b0a16423b56cf5ae71cdb0828a95c3ffc566ed7375d6c8db4f628e529e1`
+
+The lifecycle was independently checked against all six transaction receipts, transaction senders, participant and arbiter addresses, final contract state, salted metadata, USDC `Transfer` logs and the final zero contract balance.
 
 ## Legacy deployment evidence: v1
 
