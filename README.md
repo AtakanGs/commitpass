@@ -20,7 +20,7 @@
 
 CommitPass is a two-sided programmable commitment protocol for reservations and limited-capacity services. Customers and providers lock small refundable USDC commitments on Arc. When both honour the reservation, both commitments return. If one side no-shows, the other receives pre-agreed compensation.
 
-Built by **Atakan GÃ¼ndallÄ±** for the Programmable Money Hackathon.
+Built by **Atakan Gündallı** for the Programmable Money Hackathon.
 
 ## Current MVP
 
@@ -99,9 +99,9 @@ The arbiter is a single dedicated testnet account and remains a liveness and cen
 
 ## Author
 
-Atakan GÃ¼ndallÄ±
+Atakan Gündallı
 GitHub: [@AtakanGs](https://github.com/AtakanGs)
 
 ## License
 
-MIT Â© 2026 Atakan GÃ¼ndallÄ±
+MIT © 2026 Atakan Gündallı

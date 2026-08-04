@@ -1,4 +1,4 @@
-﻿# Circle Integration Evidence
+# Circle Integration Evidence
 
 CommitPass integrates Circle Developer-Controlled Wallets with the deployed CommitPass v2 contract on Arc Testnet.
 
