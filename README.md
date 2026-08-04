@@ -16,10 +16,11 @@
 - Verified v2 flow: Reservation `#5` - disputed customer no-show claim followed by dedicated arbiter resolution and full refunds
 - Legacy v1 verified flows: Reservation `#1` - early cancellation; Reservation `#3` - mutual attendance; Reservation `#5` - customer no-show settlement; Reservation `#7` - customer-confirmed provider no-show settlement
 - Testnet evidence: [docs/testnet-evidence.md](docs/testnet-evidence.md)
+- Circle integration evidence: [docs/circle-integration-evidence.md](docs/circle-integration-evidence.md)
 
 CommitPass is a two-sided programmable commitment protocol for reservations and limited-capacity services. Customers and providers lock small refundable USDC commitments on Arc. When both honour the reservation, both commitments return. If one side no-shows, the other receives pre-agreed compensation.
 
-Built by **Atakan Gündallı** for the Programmable Money Hackathon.
+Built by **Atakan GÃ¼ndallÄ±** for the Programmable Money Hackathon.
 
 ## Current MVP
 
@@ -98,9 +99,9 @@ The arbiter is a single dedicated testnet account and remains a liveness and cen
 
 ## Author
 
-Atakan Gündallı
+Atakan GÃ¼ndallÄ±
 GitHub: [@AtakanGs](https://github.com/AtakanGs)
 
 ## License
 
-MIT © 2026 Atakan Gündallı
+MIT Â© 2026 Atakan GÃ¼ndallÄ±

@@ -19,9 +19,14 @@
     "verify:arcscan:source": "node scripts/verify-arcscan-source.cjs",
     "verify:flow:provider-no-show": "node scripts/verify-reservation-4-provider-no-show.cjs",
     "verify:flow:disputed-claim": "node scripts/verify-reservation-5-disputed-claim.cjs",
-    "ci": "npm run contracts:compile && npm run contracts:test && npm run typecheck && npm run build"
+    "ci": "npm run contracts:compile && npm run contracts:test && npm run typecheck && npm run build",
+    "circle:entity:register": "node scripts/register-circle-entity-secret.cjs",
+    "circle:wallet:create": "node scripts/create-circle-arc-wallet.cjs",
+    "circle:wallet:balance": "node scripts/check-circle-wallet-balance.cjs",
+    "circle:reservation:create": "node scripts/create-circle-commitpass-reservation.cjs"
   },
   "dependencies": {
+    "@circle-fin/developer-controlled-wallets": "^10.8.0",
     "@openzeppelin/contracts": "5.6.1",
     "next": "15.5.20",
     "react": "19.2.7",
@@ -29,17 +34,17 @@
     "viem": "2.55.4"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "3.3.1",
+    "@nomicfoundation/hardhat-ethers": "3.1.0",
     "@types/node": "24.3.0",
     "@types/react": "19.1.12",
     "@types/react-dom": "19.1.9",
+    "chai": "4.5.0",
     "eslint": "9.35.0",
     "eslint-config-next": "15.5.20",
-    "hardhat": "2.28.6",
-    "typescript": "5.9.2",
-    "@eslint/eslintrc": "3.3.1",
-    "@nomicfoundation/hardhat-ethers": "3.1.0",
     "ethers": "6.15.0",
-    "chai": "4.5.0"
+    "hardhat": "2.28.6",
+    "typescript": "5.9.2"
   },
   "engines": {
     "node": ">=22"

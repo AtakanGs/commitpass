@@ -13,3 +13,7 @@ typechain-types/
 .vercel/
 
 tsconfig.tsbuildinfo
+
+# Circle local operational records
+deployments/circle-arc-testnet.json
+deployments/circle-reservation-6.json
