@@ -6,10 +6,10 @@ import {
   type Hex,
 } from "viem";
 
-const METADATA_SALT_BYTES = 32;
+const REFERENCE_SALT_BYTES = 32;
 
 export function createMetadataSalt(): Hex {
-  const bytes = new Uint8Array(METADATA_SALT_BYTES);
+  const bytes = new Uint8Array(REFERENCE_SALT_BYTES);
   globalThis.crypto.getRandomValues(bytes);
   return bytesToHex(bytes);
 }
@@ -25,6 +25,20 @@ export function hashReservationMetadata(
     : normalizedTitle;
 
   return keccak256(stringToHex(value));
+}
+
+export function createEvidenceReference(
+  evidenceNote: string,
+) {
+  const salt = createMetadataSalt();
+
+  return {
+    hash: hashReservationMetadata(
+      evidenceNote,
+      salt,
+    ),
+    salt,
+  };
 }
 
 export function verifyReservationMetadata(

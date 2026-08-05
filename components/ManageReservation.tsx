@@ -1,11 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { type Address } from "viem";
-import { ReservationActivity } from "@/components/ReservationActivity";
-import { SettlementPreview } from "@/components/SettlementPreview";
+import {
+  useEffect,
+  useState,
+} from "react";
+import {
+  isAddress,
+  isHex,
+  zeroAddress,
+  type Address,
+  type Hex,
+} from "viem";
+import {
+  ReservationActivity,
+} from "@/components/ReservationActivity";
+import {
+  SettlementPreview,
+} from "@/components/SettlementPreview";
 import {
   acceptReservation,
+  confirmAttendanceWithAttestation,
+  disputeClaim,
   explainContractError,
   formatUsdc,
   openNoShowClaim,
@@ -20,22 +35,51 @@ import {
   getConnectedAccount,
   WALLET_ACCOUNT_EVENT,
 } from "@/lib/wallet";
-import { verifyReservationMetadata } from "@/lib/metadata";
+import {
+  verifyReservationMetadata,
+} from "@/lib/metadata";
 
-function sameAddress(first?: string, second?: string) {
+const ZERO_HASH =
+  "0x0000000000000000000000000000000000000000000000000000000000000000";
+
+function sameAddress(
+  first?: string,
+  second?: string,
+) {
   return Boolean(
     first &&
       second &&
-      first.toLowerCase() === second.toLowerCase(),
+      first.toLowerCase() ===
+        second.toLowerCase(),
   );
 }
 
 function compact(address: string) {
-  return address.slice(0, 6) + "..." + address.slice(-4);
+  return (
+    address.slice(0, 6) +
+    "..." +
+    address.slice(-4)
+  );
 }
 
-function formatDate(timestamp: number) {
-  return new Date(timestamp * 1000).toLocaleString();
+function compactHash(hash: string) {
+  return (
+    hash.slice(0, 10) +
+    "..." +
+    hash.slice(-8)
+  );
+}
+
+function formatDate(
+  timestamp: number,
+) {
+  if (!timestamp) {
+    return "-";
+  }
+
+  return new Date(
+    timestamp * 1000,
+  ).toLocaleString();
 }
 
 type ManageReservationProps = {
@@ -51,26 +95,80 @@ export function ManageReservation({
   reservationTitle,
   reservationSalt,
 }: ManageReservationProps) {
-  const [id, setId] = useState(initialId);
+  const [id, setId] =
+    useState(initialId);
+
   const [reservation, setReservation] =
-    useState<Awaited<ReturnType<typeof readReservation>>>();
-  const [account, setAccount] = useState<Address>();
-  const [arbiter, setArbiter] = useState<Address>();
-  const [message, setMessage] = useState<string>();
-  const [busy, setBusy] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [now, setNow] = useState(0);
+    useState<
+      Awaited<
+        ReturnType<
+          typeof readReservation
+        >
+      >
+    >();
+
+  const [account, setAccount] =
+    useState<Address>();
+
+  const [arbiter, setArbiter] =
+    useState<Address>();
+
+  const [message, setMessage] =
+    useState<string>();
+
+  const [busy, setBusy] =
+    useState(false);
+
+  const [copied, setCopied] =
+    useState(false);
+
+  const [now, setNow] =
+    useState(0);
+
+  const [
+    claimEvidence,
+    setClaimEvidence,
+  ] = useState("");
+
+  const [
+    disputeEvidence,
+    setDisputeEvidence,
+  ] = useState("");
+
+  const [
+    attestationParticipant,
+    setAttestationParticipant,
+  ] = useState("");
+
+  const [
+    attestationValidUntil,
+    setAttestationValidUntil,
+  ] = useState("");
+
+  const [
+    attestationSignature,
+    setAttestationSignature,
+  ] = useState("");
 
   useEffect(() => {
     setNow(Date.now());
 
-    const timer = window.setInterval(() => {
-      setNow(Date.now());
-    }, 15_000);
+    const timer =
+      window.setInterval(() => {
+        setNow(Date.now());
+      }, 15_000);
 
-    function handleWalletAccount(event: Event) {
-      const walletEvent = event as CustomEvent<Address | undefined>;
-      setAccount(walletEvent.detail);
+    function handleWalletAccount(
+      event: Event,
+    ) {
+      const walletEvent =
+        event as CustomEvent<
+          Address | undefined
+        >;
+
+      setAccount(
+        walletEvent.detail,
+      );
     }
 
     window.addEventListener(
@@ -84,6 +182,7 @@ export function ManageReservation({
 
     return () => {
       window.clearInterval(timer);
+
       window.removeEventListener(
         WALLET_ACCOUNT_EVENT,
         handleWalletAccount,
@@ -96,45 +195,107 @@ export function ManageReservation({
       void load(initialId);
     }
 
-    // Auto-load is intentionally tied to shared URL parameters.
+    // Auto-load is intentionally tied to
+    // shared URL parameters.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoLoad, initialId]);
 
-  async function run(
+  async function run<T>(
     label: string,
-    action: () => Promise<unknown>,
+    action: () => Promise<T>,
+    success?: (result: T) => string,
   ) {
     setBusy(true);
     setMessage(label + "...");
 
     try {
-      await action();
-      setMessage(label + " completed.");
-      await load();
+      const result =
+        await action();
+
+      await load(id, false);
+
+      setMessage(
+        success
+          ? success(result)
+          : label + " completed.",
+      );
     } catch (caught) {
-      setMessage(explainContractError(caught));
+      setMessage(
+        explainContractError(caught),
+      );
     } finally {
       setBusy(false);
     }
   }
 
-  async function load(targetId = id) {
+  async function load(
+    targetId = id,
+    announce = true,
+  ) {
+    if (
+      !/^\d+$/.test(targetId) ||
+      BigInt(targetId) <= 0n
+    ) {
+      setMessage(
+        "Enter a valid reservation ID.",
+      );
+      return;
+    }
+
     setBusy(true);
-    setMessage("Loading reservation...");
+
+    if (announce) {
+      setMessage(
+        "Loading reservation...",
+      );
+    }
+
     setId(targetId);
 
     try {
-      const [value, configuredArbiter, connectedAccount] =
-        await Promise.all([
-          readReservation(BigInt(targetId)),
-          readArbiter(),
-          getConnectedAccount(),
-        ]);
+      const [
+        value,
+        configuredArbiter,
+        connectedAccount,
+      ] = await Promise.all([
+        readReservation(
+          BigInt(targetId),
+        ),
+        readArbiter(),
+        getConnectedAccount(),
+      ]);
 
       setReservation(value);
-      setArbiter(configuredArbiter);
-      setAccount(connectedAccount);
-      setMessage(undefined);
+      setArbiter(
+        configuredArbiter,
+      );
+      setAccount(
+        connectedAccount,
+      );
+
+      if (
+        !attestationParticipant &&
+        connectedAccount &&
+        (
+          sameAddress(
+            connectedAccount,
+            value.provider,
+          ) ||
+          sameAddress(
+            connectedAccount,
+            value.customer,
+          )
+        )
+      ) {
+        setAttestationParticipant(
+          connectedAccount,
+        );
+      }
+
+      if (announce) {
+        setMessage(undefined);
+      }
+
       setNow(Date.now());
     } catch (caught) {
       setReservation(undefined);
@@ -145,181 +306,392 @@ export function ManageReservation({
           : String(caught);
 
       setMessage(
-        /InvalidState/i.test(rawMessage)
+        /InvalidState/i.test(
+          rawMessage,
+        )
           ? "Reservation #" +
               targetId +
-              " was not found on the current CommitPass deployment."
-          : explainContractError(caught),
+              " was not found on the final CommitPass V3 deployment."
+          : explainContractError(
+              caught,
+            ),
       );
     } finally {
       setBusy(false);
     }
   }
 
-  const reservationId = BigInt(id || "0");
-  const status = reservation?.status;
-  const metadataVerified = Boolean(
+  const reservationId =
+    /^\d+$/.test(id)
+      ? BigInt(id)
+      : 0n;
+
+  const status =
+    reservation?.status;
+
+  const metadataVerified =
+    Boolean(
+      reservation &&
+        reservationTitle &&
+        verifyReservationMetadata(
+          reservationTitle,
+          reservation.metadataHash,
+          reservationSalt,
+        ),
+    );
+
+  const nowSeconds =
+    Math.floor(now / 1000);
+
+  const isProvider =
+    sameAddress(
+      account,
+      reservation?.provider,
+    );
+
+  const isCustomer =
+    sameAddress(
+      account,
+      reservation?.customer,
+    );
+
+  const isArbiter =
+    sameAddress(
+      account,
+      arbiter,
+    );
+
+  const isParticipant =
+    isProvider || isCustomer;
+
+  const isPlatformVerified =
+    Boolean(
+      reservation &&
+        !sameAddress(
+          reservation
+            .attendanceAttestor,
+          zeroAddress,
+        ),
+    );
+
+  const startTime =
+    reservation
+      ? Number(
+          reservation.startTime,
+        )
+      : 0;
+
+  const cancellationDeadline =
+    reservation
+      ? Number(
+          reservation
+            .freeCancellationDeadline,
+        )
+      : 0;
+
+  const gracePeriod =
+    reservation
+      ? Number(
+          reservation.gracePeriod,
+        )
+      : 0;
+
+  const checkInOpensAt =
+    startTime - gracePeriod;
+
+  const checkInClosesAt =
+    startTime + gracePeriod;
+
+  const claimOpeningDeadline =
+    reservation
+      ? checkInClosesAt +
+        Number(
+          reservation.claimWindow,
+        )
+      : 0;
+
+  const disputeDeadline =
     reservation &&
-      reservationTitle &&
-      verifyReservationMetadata(
-        reservationTitle,
-        reservation.metadataHash,
-        reservationSalt,
-      ),
-  );
-  const nowSeconds = Math.floor(now / 1000);
+    Number(
+      reservation.claimOpenedAt,
+    ) > 0
+      ? Number(
+          reservation.claimOpenedAt,
+        ) +
+        Number(
+          reservation.disputeWindow,
+        )
+      : 0;
 
-  const isProvider = sameAddress(
-    account,
-    reservation?.provider,
-  );
-  const isCustomer = sameAddress(
-    account,
-    reservation?.customer,
-  );
-  const isArbiter = sameAddress(account, arbiter);
-  const isParticipant = isProvider || isCustomer;
-
-  const startTime = reservation
-    ? Number(reservation.startTime)
-    : 0;
-  const cancellationDeadline = reservation
-    ? Number(reservation.freeCancellationDeadline)
-    : 0;
-  const gracePeriod = reservation
-    ? Number(reservation.gracePeriod)
-    : 0;
-  const checkInOpensAt = startTime - gracePeriod;
-  const checkInClosesAt = startTime + gracePeriod;
-  const claimDeadline = reservation
-    ? Number(reservation.claimOpenedAt) +
-      Number(reservation.disputeWindow)
-    : 0;
+  const arbiterDeadline =
+    reservation &&
+    Number(
+      reservation.disputedAt,
+    ) > 0
+      ? Number(
+          reservation.disputedAt,
+        ) +
+        Number(
+          reservation.arbiterWindow,
+        )
+      : 0;
 
   const isBeforeCancellationDeadline =
-    nowSeconds <= cancellationDeadline;
-  const isCheckInOpen =
-    nowSeconds >= checkInOpensAt &&
-    nowSeconds <= checkInClosesAt;
-  const isNoShowOpen =
-    nowSeconds > checkInClosesAt;
+    nowSeconds <=
+    cancellationDeadline;
 
-  const connectedPartyConfirmed = isProvider
-    ? reservation?.providerConfirmed
-    : isCustomer
-      ? reservation?.customerConfirmed
-      : false;
+  const isCheckInOpen =
+    nowSeconds >=
+      checkInOpensAt &&
+    nowSeconds <=
+      checkInClosesAt;
+
+  const isClaimWindowOpen =
+    nowSeconds >
+      checkInClosesAt &&
+    nowSeconds <=
+      claimOpeningDeadline;
+
+  const connectedPartyConfirmed =
+    isProvider
+      ? Boolean(
+          reservation
+            ?.providerConfirmed,
+        )
+      : isCustomer
+        ? Boolean(
+            reservation
+              ?.customerConfirmed,
+          )
+        : false;
 
   const canDisputePendingClaim =
     status === 3 &&
-    nowSeconds <= claimDeadline &&
-    ((reservation?.pendingOutcome === 2 && isCustomer) ||
-      (reservation?.pendingOutcome === 3 && isProvider));
+    nowSeconds <=
+      disputeDeadline &&
+    (
+      (
+        reservation
+          ?.pendingOutcome === 2 &&
+        isCustomer
+      ) ||
+      (
+        reservation
+          ?.pendingOutcome === 3 &&
+        isProvider
+      )
+    );
 
   const canFinalizePendingClaim =
     status === 3 &&
-    isParticipant &&
-    nowSeconds > claimDeadline;
+    disputeDeadline > 0 &&
+    nowSeconds >
+      disputeDeadline;
 
-  let roleLabel = "Wallet not connected";
+  const canRefundStale =
+    status === 2 &&
+    claimOpeningDeadline > 0 &&
+    nowSeconds >
+      claimOpeningDeadline;
+
+  const canRefundExpiredDispute =
+    status === 4 &&
+    arbiterDeadline > 0 &&
+    nowSeconds >
+      arbiterDeadline;
+
+  const canArbiterResolve =
+    status === 4 &&
+    isArbiter &&
+    arbiterDeadline > 0 &&
+    nowSeconds <=
+      arbiterDeadline;
+
+  const attestationReady =
+    isAddress(
+      attestationParticipant,
+    ) &&
+    /^\d+$/.test(
+      attestationValidUntil,
+    ) &&
+    Number(
+      attestationValidUntil,
+    ) > nowSeconds &&
+    isHex(
+      attestationSignature,
+    ) &&
+    attestationSignature.length > 2;
+
+  let roleLabel =
+    "Wallet not connected";
+
   let roleDescription =
-    "Connect the provider, customer, or arbiter wallet and reload the reservation to see available actions.";
+    "Connect a participant, relayer or arbiter wallet to see available actions.";
 
   if (account && isProvider) {
     roleLabel = "Provider";
     roleDescription =
-      "You created this reservation and supplied the provider commitment.";
-  } else if (account && isCustomer) {
+      "You created this V3 reservation and funded the provider commitment.";
+  } else if (
+    account &&
+    isCustomer
+  ) {
     roleLabel = "Customer";
     roleDescription =
-      "You were invited to this reservation and supplied the customer commitment.";
-  } else if (account && isArbiter) {
+      "You were invited and may fund the equal customer commitment.";
+  } else if (
+    account &&
+    isArbiter
+  ) {
     roleLabel = "Arbiter";
     roleDescription =
-      "You may resolve a disputed claim by selecting its final onchain outcome.";
+      "You may resolve a disputed claim before the immutable arbiter deadline.";
   } else if (account) {
-    roleLabel = "Observer";
+    roleLabel =
+      "Observer or relayer";
     roleDescription =
-      "This wallet is not a participant or the arbiter for the loaded reservation.";
+      "This wallet may inspect state and submit permissionless lifecycle calls or a valid platform signature.";
   }
 
-  let actionHint: string | undefined;
+  let actionHint:
+    | string
+    | undefined;
 
-  if (reservation && !account) {
-    actionHint =
-      "Connect the provider, customer, or arbiter wallet to manage this reservation.";
-  } else if (
+  if (
     reservation &&
-    account &&
-    !isParticipant &&
-    !isArbiter
+    !account
   ) {
     actionHint =
-      "Observers can inspect the reservation, but only its participants or arbiter can act.";
-  } else if (status === 1 && isCustomer) {
-    actionHint = isBeforeCancellationDeadline
-      ? "Accept before the free-cancellation deadline to activate the reservation."
-      : "The customer acceptance deadline has passed.";
-  } else if (status === 1 && isProvider) {
-    actionHint = isBeforeCancellationDeadline
-      ? "The invitation is waiting for the customer."
-      : "The invitation has expired and the provider commitment can be reclaimed.";
-  } else if (status === 2 && isParticipant) {
-    if (connectedPartyConfirmed) {
+      "Connect a wallet to submit an onchain action.";
+  } else if (
+    status === 1 &&
+    isCustomer
+  ) {
+    actionHint =
+      isBeforeCancellationDeadline
+        ? "Accept before the free-cancellation deadline to activate the reservation."
+        : "The invitation acceptance deadline has passed.";
+  } else if (
+    status === 1 &&
+    isProvider
+  ) {
+    actionHint =
+      isBeforeCancellationDeadline
+        ? "The invitation is waiting for the customer."
+        : "The invitation expired and its provider commitment can be reclaimed.";
+  } else if (
+    status === 2 &&
+    isParticipant
+  ) {
+    if (
+      connectedPartyConfirmed
+    ) {
       actionHint =
-        "Your attendance is confirmed. Waiting for the other party.";
-    } else if (nowSeconds < checkInOpensAt) {
+        "Your attendance is recorded. Waiting for the other party or the next lifecycle deadline.";
+    } else if (
+      nowSeconds <
+      checkInOpensAt
+    ) {
       actionHint =
-        "Attendance confirmation opens at " +
-        formatDate(checkInOpensAt) +
+        "Attendance opens at " +
+        formatDate(
+          checkInOpensAt,
+        ) +
         ".";
-    } else if (isCheckInOpen) {
+    } else if (
+      isCheckInOpen &&
+      isPlatformVerified
+    ) {
       actionHint =
-        "The check-in window is open. Confirm attendance now.";
-    } else if (!connectedPartyConfirmed) {
+        "A valid platform signature is required. Any relayer may submit it.";
+    } else if (
+      isCheckInOpen
+    ) {
       actionHint =
-        "The check-in window has closed. You cannot open a no-show claim because your attendance was not confirmed.";
-    } else {
+        "The self-attested check-in window is open.";
+    } else if (
+      isClaimWindowOpen
+    ) {
       actionHint =
-        "The check-in window has closed. You may open a no-show claim if the other party did not confirm attendance.";
+        connectedPartyConfirmed
+          ? "You may open a no-show claim with a salted evidence reference."
+          : "You cannot claim because your own attendance was not recorded.";
+    } else if (
+      canRefundStale
+    ) {
+      actionHint =
+        "The claim window expired. Anyone may refund both commitments.";
     }
-  } else if (status === 3 && isParticipant) {
-    actionHint = nowSeconds <= claimDeadline
-      ? "The no-show claim is inside its dispute window."
-      : "The dispute window has ended. The pending claim can now be finalized.";
-  } else if (status === 4 && isArbiter) {
+  } else if (
+    status === 3
+  ) {
     actionHint =
-      "Select the final outcome carefully. Arbiter resolution settles the funds immediately and cannot be reversed.";
-  } else if (status === 4) {
+      nowSeconds <=
+      disputeDeadline
+        ? "The claim is inside its dispute window."
+        : "The dispute window ended. Anyone may finalize the undisputed claim.";
+  } else if (
+    status === 4 &&
+    canArbiterResolve
+  ) {
     actionHint =
-      "The claim is disputed and is awaiting arbiter resolution.";
-  } else if (status === 5) {
+      "The arbiter may select the final outcome before the deadline.";
+  } else if (
+    status === 4 &&
+    canRefundExpiredDispute
+  ) {
     actionHint =
-      "This reservation has been resolved and no further participant action is required.";
-  } else if (status === 6) {
+      "The arbiter deadline expired. Anyone may refund both commitments.";
+  } else if (
+    status === 4
+  ) {
     actionHint =
-      "This reservation was cancelled and its applicable commitments were refunded.";
+      "The dispute is awaiting arbiter resolution.";
+  } else if (
+    status === 5
+  ) {
+    actionHint =
+      "This reservation is resolved.";
+  } else if (
+    status === 6
+  ) {
+    actionHint =
+      "This reservation is cancelled.";
   }
 
   function getSharePath() {
-    const params = new URLSearchParams({ id });
+    const params =
+      new URLSearchParams({
+        id,
+      });
 
     if (reservationTitle) {
-      params.set("title", reservationTitle);
+      params.set(
+        "title",
+        reservationTitle,
+      );
     }
 
     if (reservationSalt) {
-      params.set("salt", reservationSalt);
+      params.set(
+        "salt",
+        reservationSalt,
+      );
     }
 
-    return "/reservation?" + params.toString();
+    return (
+      "/reservation?" +
+      params.toString()
+    );
   }
 
   async function copyShareLink() {
     try {
-      await navigator.clipboard.writeText(
-        window.location.origin + getSharePath(),
-      );
+      await navigator.clipboard
+        .writeText(
+          window.location.origin +
+            getSharePath(),
+        );
 
       setCopied(true);
 
@@ -338,10 +710,13 @@ export function ManageReservation({
       <div className="formHeader">
         <span>
           {autoLoad
-            ? "Reservation details"
-            : "Reservation console"}
+            ? "V3 reservation details"
+            : "V3 reservation console"}
         </span>
-        <span className="secureTag">Onchain</span>
+
+        <span className="secureTag">
+          Final contract
+        </span>
       </div>
 
       {!autoLoad ? (
@@ -349,17 +724,28 @@ export function ManageReservation({
           <input
             value={id}
             onChange={(event) =>
-              setId(event.target.value.replace(/\D/g, ""))
+              setId(
+                event.target.value
+                  .replace(
+                    /\D/g,
+                    "",
+                  ),
+              )
             }
             aria-label="Reservation ID"
             placeholder="Reservation ID"
             inputMode="numeric"
           />
+
           <button
             className="button secondary"
             type="button"
-            onClick={() => void load()}
-            disabled={busy || !id}
+            onClick={() =>
+              void load()
+            }
+            disabled={
+              busy || !id
+            }
           >
             Load
           </button>
@@ -370,8 +756,14 @@ export function ManageReservation({
         <>
           {reservationTitle ? (
             <div className="reservationTitle">
-              <span>Shared session</span>
-              <h3>{reservationTitle}</h3>
+              <span>
+                Shared session
+              </span>
+
+              <h3>
+                {reservationTitle}
+              </h3>
+
               <small
                 className={
                   metadataVerified
@@ -380,7 +772,7 @@ export function ManageReservation({
                 }
               >
                 {metadataVerified
-                  ? "Verified against the onchain metadata reference"
+                  ? "Verified against the salted onchain metadata reference"
                   : "Shared label does not match the onchain metadata reference"}
               </small>
             </div>
@@ -388,12 +780,22 @@ export function ManageReservation({
 
           <div className="roleBanner">
             <div className="roleBannerTop">
-              <span>Connected role</span>
-              <strong>{roleLabel}</strong>
+              <span>
+                Connected role
+              </span>
+              <strong>
+                {roleLabel}
+              </strong>
             </div>
-            <p>{roleDescription}</p>
+
+            <p>
+              {roleDescription}
+            </p>
+
             {account ? (
-              <small>{compact(account)}</small>
+              <small>
+                {compact(account)}
+              </small>
             ) : null}
           </div>
 
@@ -402,13 +804,23 @@ export function ManageReservation({
               <div>
                 <span>Status</span>
                 <strong>
-                  {STATUS_LABELS[reservation.status]}
+                  {
+                    STATUS_LABELS[
+                      reservation.status
+                    ]
+                  }
                 </strong>
               </div>
+
               <div>
                 <span>Outcome</span>
                 <strong>
-                  {OUTCOME_LABELS[reservation.finalOutcome]}
+                  {
+                    OUTCOME_LABELS[
+                      reservation
+                        .finalOutcome
+                    ]
+                  }
                 </strong>
               </div>
             </div>
@@ -416,121 +828,264 @@ export function ManageReservation({
             <dl>
               <div>
                 <dt>Provider</dt>
-                <dd>{compact(reservation.provider)}</dd>
+                <dd>
+                  {compact(
+                    reservation.provider,
+                  )}
+                </dd>
               </div>
+
               <div>
                 <dt>Customer</dt>
-                <dd>{compact(reservation.customer)}</dd>
-              </div>
-              <div>
-                <dt>Provider commitment</dt>
                 <dd>
-                  {formatUsdc(
-                    reservation.providerCommitment,
+                  {compact(
+                    reservation.customer,
                   )}
                 </dd>
               </div>
+
               <div>
-                <dt>Customer commitment</dt>
+                <dt>
+                  Attendance mode
+                </dt>
+                <dd>
+                  {isPlatformVerified
+                    ? "Platform-verified"
+                    : "Self-attested"}
+                </dd>
+              </div>
+
+              {isPlatformVerified ? (
+                <div>
+                  <dt>
+                    Platform attestor
+                  </dt>
+                  <dd>
+                    {compact(
+                      reservation
+                        .attendanceAttestor,
+                    )}
+                  </dd>
+                </div>
+              ) : null}
+
+              <div>
+                <dt>
+                  Commitment per party
+                </dt>
                 <dd>
                   {formatUsdc(
-                    reservation.customerCommitment,
+                    reservation
+                      .commitmentAmount,
                   )}
                 </dd>
               </div>
+
               <div>
-                <dt>Provider compensation</dt>
+                <dt>
+                  Total locked when active
+                </dt>
                 <dd>
                   {formatUsdc(
-                    reservation.providerCompensation,
+                    reservation
+                      .commitmentAmount *
+                      2n,
                   )}
                 </dd>
               </div>
+
               <div>
-                <dt>Reservation start</dt>
-                <dd>{formatDate(startTime)}</dd>
-              </div>
-              <div>
-                <dt>Free cancellation deadline</dt>
-                <dd>{formatDate(cancellationDeadline)}</dd>
-              </div>
-              <div>
-                <dt>Check-in window</dt>
+                <dt>
+                  Reservation start
+                </dt>
                 <dd>
-                  {formatDate(checkInOpensAt)} -{" "}
-                  {formatDate(checkInClosesAt)}
+                  {formatDate(
+                    startTime,
+                  )}
                 </dd>
               </div>
+
               <div>
-                <dt>Provider attendance</dt>
+                <dt>
+                  Free cancellation deadline
+                </dt>
                 <dd>
-                  {reservation?.providerConfirmed
-                    ? "Confirmed"
-                    : "Pending"}
+                  {formatDate(
+                    cancellationDeadline,
+                  )}
                 </dd>
               </div>
+
               <div>
-                <dt>Customer attendance</dt>
+                <dt>
+                  Check-in window
+                </dt>
                 <dd>
-                  {reservation?.customerConfirmed
+                  {formatDate(
+                    checkInOpensAt,
+                  )}
+                  {" - "}
+                  {formatDate(
+                    checkInClosesAt,
+                  )}
+                </dd>
+              </div>
+
+              <div>
+                <dt>
+                  Claim opening deadline
+                </dt>
+                <dd>
+                  {formatDate(
+                    claimOpeningDeadline,
+                  )}
+                </dd>
+              </div>
+
+              <div>
+                <dt>
+                  Provider attendance
+                </dt>
+                <dd>
+                  {reservation
+                    .providerConfirmed
                     ? "Confirmed"
                     : "Pending"}
                 </dd>
               </div>
 
-              {reservation.pendingOutcome !== 0 ? (
+              <div>
+                <dt>
+                  Customer attendance
+                </dt>
+                <dd>
+                  {reservation
+                    .customerConfirmed
+                    ? "Confirmed"
+                    : "Pending"}
+                </dd>
+              </div>
+
+              {reservation
+                .pendingOutcome !== 0 ? (
                 <div>
-                  <dt>Pending claim</dt>
+                  <dt>
+                    Pending claim
+                  </dt>
                   <dd>
                     {
                       OUTCOME_LABELS[
-                        reservation.pendingOutcome
+                        reservation
+                          .pendingOutcome
                       ]
                     }
                   </dd>
                 </div>
               ) : null}
 
-              {Number(reservation.claimOpenedAt) > 0 ? (
+              {disputeDeadline > 0 ? (
                 <div>
-                  <dt>Dispute deadline</dt>
-                  <dd>{formatDate(claimDeadline)}</dd>
+                  <dt>
+                    Dispute deadline
+                  </dt>
+                  <dd>
+                    {formatDate(
+                      disputeDeadline,
+                    )}
+                  </dd>
+                </div>
+              ) : null}
+
+              {arbiterDeadline > 0 ? (
+                <div>
+                  <dt>
+                    Arbiter deadline
+                  </dt>
+                  <dd>
+                    {formatDate(
+                      arbiterDeadline,
+                    )}
+                  </dd>
+                </div>
+              ) : null}
+
+              {reservation
+                .claimEvidenceHash !==
+              ZERO_HASH ? (
+                <div>
+                  <dt>
+                    Claim evidence hash
+                  </dt>
+                  <dd title={
+                    reservation
+                      .claimEvidenceHash
+                  }>
+                    {compactHash(
+                      reservation
+                        .claimEvidenceHash,
+                    )}
+                  </dd>
+                </div>
+              ) : null}
+
+              {reservation
+                .disputeEvidenceHash !==
+              ZERO_HASH ? (
+                <div>
+                  <dt>
+                    Dispute evidence hash
+                  </dt>
+                  <dd title={
+                    reservation
+                      .disputeEvidenceHash
+                  }>
+                    {compactHash(
+                      reservation
+                        .disputeEvidenceHash,
+                    )}
+                  </dd>
                 </div>
               ) : null}
             </dl>
 
             <SettlementPreview
-              providerCommitment={
-                reservation.providerCommitment
-              }
-              customerCommitment={
-                reservation.customerCommitment
-              }
-              providerCompensation={
-                reservation.providerCompensation
+              commitmentAmount={
+                reservation
+                  .commitmentAmount
               }
             />
 
             <ReservationActivity
               reservationId={id}
-              status={STATUS_LABELS[reservation.status]}
+              status={
+                STATUS_LABELS[
+                  reservation.status
+                ]
+              }
               outcome={
                 OUTCOME_LABELS[
-                  reservation.finalOutcome
+                  reservation
+                    .finalOutcome
                 ]
               }
               providerConfirmed={
-                reservation.providerConfirmed
+                reservation
+                  .providerConfirmed
               }
               customerConfirmed={
-                reservation.customerConfirmed
+                reservation
+                  .customerConfirmed
               }
               claimOpened={
-                Number(reservation.claimOpenedAt) > 0
+                Number(
+                  reservation
+                    .claimOpenedAt,
+                ) > 0
               }
               pendingOutcome={
                 OUTCOME_LABELS[
-                  reservation.pendingOutcome
+                  reservation
+                    .pendingOutcome
                 ]
               }
             />
@@ -548,44 +1103,242 @@ export function ManageReservation({
               <button
                 className="button secondary"
                 type="button"
-                onClick={copyShareLink}
+                onClick={
+                  copyShareLink
+                }
               >
-                {copied ? "Link copied" : "Copy link"}
+                {copied
+                  ? "Link copied"
+                  : "Copy link"}
               </button>
             </div>
 
             <div className="checkinCode">
-              <span>Check-in reference</span>
+              <span>
+                Check-in reference
+              </span>
               <strong>
-                {"CP-" + id.padStart(6, "0")}
+                {"CP-" +
+                  id.padStart(
+                    6,
+                    "0",
+                  )}
               </strong>
               <small>
-                Human-readable reference for this onchain
+                Human-readable reference
+                for this final V3
                 reservation.
               </small>
             </div>
           </div>
+
+          {status === 2 &&
+          isPlatformVerified &&
+          (
+            !reservation
+              .providerConfirmed ||
+            !reservation
+              .customerConfirmed
+          ) ? (
+            <div className="roleBanner">
+              <div className="roleBannerTop">
+                <span>
+                  Platform attestation relay
+                </span>
+                <strong>
+                  Signed EIP-712
+                </strong>
+              </div>
+
+              <p>
+                Paste the participant,
+                expiration and signature
+                generated by the configured
+                platform signer. Any connected
+                wallet may relay it.
+              </p>
+
+              <label>
+                Participant wallet
+                <input
+                  value={
+                    attestationParticipant
+                  }
+                  onChange={(event) =>
+                    setAttestationParticipant(
+                      event.target.value,
+                    )
+                  }
+                  placeholder="0x..."
+                  spellCheck={false}
+                />
+              </label>
+
+              <label>
+                Valid-until Unix timestamp
+                <input
+                  value={
+                    attestationValidUntil
+                  }
+                  onChange={(event) =>
+                    setAttestationValidUntil(
+                      event.target.value
+                        .replace(
+                          /\D/g,
+                          "",
+                        ),
+                    )
+                  }
+                  placeholder="1780000000"
+                  inputMode="numeric"
+                />
+              </label>
+
+              <label>
+                Platform signature
+                <input
+                  value={
+                    attestationSignature
+                  }
+                  onChange={(event) =>
+                    setAttestationSignature(
+                      event.target.value,
+                    )
+                  }
+                  placeholder="0x..."
+                  spellCheck={false}
+                />
+              </label>
+
+              <button
+                className="button secondary"
+                type="button"
+                onClick={() =>
+                  run(
+                    "Submitting platform attendance",
+                    () =>
+                      confirmAttendanceWithAttestation(
+                        reservationId,
+                        attestationParticipant as Address,
+                        BigInt(
+                          attestationValidUntil,
+                        ),
+                        attestationSignature as Hex,
+                      ),
+                  )
+                }
+                disabled={
+                  busy ||
+                  !isCheckInOpen ||
+                  !attestationReady
+                }
+              >
+                Submit signed attendance
+              </button>
+            </div>
+          ) : null}
+
+          {status === 2 &&
+          isProvider &&
+          isClaimWindowOpen &&
+          reservation
+            .providerConfirmed &&
+          !reservation
+            .customerConfirmed ? (
+            <label>
+              Customer no-show evidence note
+              <input
+                value={claimEvidence}
+                onChange={(event) =>
+                  setClaimEvidence(
+                    event.target.value,
+                  )
+                }
+                maxLength={240}
+                placeholder="Short offchain evidence reference"
+              />
+              <small className="fieldHelp">
+                The note remains local. Only a
+                salted hash is written onchain.
+              </small>
+            </label>
+          ) : null}
+
+          {status === 2 &&
+          isCustomer &&
+          isClaimWindowOpen &&
+          reservation
+            .customerConfirmed &&
+          !reservation
+            .providerConfirmed ? (
+            <label>
+              Provider no-show evidence note
+              <input
+                value={claimEvidence}
+                onChange={(event) =>
+                  setClaimEvidence(
+                    event.target.value,
+                  )
+                }
+                maxLength={240}
+                placeholder="Short offchain evidence reference"
+              />
+              <small className="fieldHelp">
+                The note remains local. Only a
+                salted hash is written onchain.
+              </small>
+            </label>
+          ) : null}
+
+          {status === 3 &&
+          canDisputePendingClaim ? (
+            <label>
+              Dispute evidence note
+              <input
+                value={
+                  disputeEvidence
+                }
+                onChange={(event) =>
+                  setDisputeEvidence(
+                    event.target.value,
+                  )
+                }
+                maxLength={240}
+                placeholder="Short offchain evidence reference"
+              />
+              <small className="fieldHelp">
+                The note remains local. Only a
+                salted hash is written onchain.
+              </small>
+            </label>
+          ) : null}
         </>
       ) : null}
 
       <div className="actionGrid">
-        {status === 1 && isCustomer ? (
+        {status === 1 &&
+        isCustomer ? (
           <button
             onClick={() =>
               run(
                 "Accepting reservation",
-                () => acceptReservation(reservationId),
+                () =>
+                  acceptReservation(
+                    reservationId,
+                  ),
               )
             }
             disabled={
-              busy || !isBeforeCancellationDeadline
+              busy ||
+              !isBeforeCancellationDeadline
             }
           >
-            Accept reservation
+            Accept equal commitment
           </button>
         ) : null}
 
-        {status === 1 && isProvider ? (
+        {status === 1 &&
+        isProvider ? (
           <>
             <button
               onClick={() =>
@@ -599,7 +1352,8 @@ export function ManageReservation({
                 )
               }
               disabled={
-                busy || !isBeforeCancellationDeadline
+                busy ||
+                !isBeforeCancellationDeadline
               }
             >
               Cancel invitation
@@ -617,7 +1371,8 @@ export function ManageReservation({
                 )
               }
               disabled={
-                busy || isBeforeCancellationDeadline
+                busy ||
+                isBeforeCancellationDeadline
               }
             >
               Reclaim expired commitment
@@ -627,11 +1382,12 @@ export function ManageReservation({
 
         {status === 2 &&
         isParticipant &&
-        !connectedPartyConfirmed ? (
+        !connectedPartyConfirmed &&
+        !isPlatformVerified ? (
           <button
             onClick={() =>
               run(
-                "Confirming attendance",
+                "Confirming self-attested attendance",
                 () =>
                   writeSimple(
                     "confirmAttendance",
@@ -639,13 +1395,17 @@ export function ManageReservation({
                   ),
               )
             }
-            disabled={busy || !isCheckInOpen}
+            disabled={
+              busy ||
+              !isCheckInOpen
+            }
           >
             Confirm attendance
           </button>
         ) : null}
 
-        {status === 2 && isParticipant ? (
+        {status === 2 &&
+        isParticipant ? (
           <button
             onClick={() =>
               run(
@@ -658,76 +1418,130 @@ export function ManageReservation({
               )
             }
             disabled={
-              busy || !isBeforeCancellationDeadline
+              busy ||
+              !isBeforeCancellationDeadline
             }
           >
             Cancel early
           </button>
         ) : null}
 
-        {status === 2 && isProvider ? (
+        {status === 2 &&
+        isProvider ? (
           <button
             onClick={() =>
               run(
                 "Opening customer no-show claim",
                 () =>
-                  openNoShowClaim(reservationId, 2),
+                  openNoShowClaim(
+                    reservationId,
+                    2,
+                    claimEvidence,
+                  ),
+                (result) =>
+                  "Claim opened. Evidence hash: " +
+                  result.evidenceHash +
+                  ". Save salt privately: " +
+                  result.evidenceSalt,
               )
             }
             disabled={
               busy ||
-              !isNoShowOpen ||
-              !reservation?.providerConfirmed ||
-              reservation?.customerConfirmed
+              !isClaimWindowOpen ||
+              !reservation
+                ?.providerConfirmed ||
+              reservation
+                ?.customerConfirmed ||
+              !claimEvidence.trim()
             }
           >
             Claim customer no-show
           </button>
         ) : null}
 
-        {status === 2 && isCustomer ? (
+        {status === 2 &&
+        isCustomer ? (
           <button
             onClick={() =>
               run(
                 "Opening provider no-show claim",
                 () =>
-                  openNoShowClaim(reservationId, 3),
+                  openNoShowClaim(
+                    reservationId,
+                    3,
+                    claimEvidence,
+                  ),
+                (result) =>
+                  "Claim opened. Evidence hash: " +
+                  result.evidenceHash +
+                  ". Save salt privately: " +
+                  result.evidenceSalt,
               )
             }
             disabled={
               busy ||
-              !isNoShowOpen ||
-              !reservation?.customerConfirmed ||
-              reservation?.providerConfirmed
+              !isClaimWindowOpen ||
+              !reservation
+                ?.customerConfirmed ||
+              reservation
+                ?.providerConfirmed ||
+              !claimEvidence.trim()
             }
           >
             Claim provider no-show
           </button>
         ) : null}
 
-        {status === 3 && canDisputePendingClaim ? (
+        {canRefundStale ? (
           <button
             onClick={() =>
               run(
-                "Disputing claim",
+                "Refunding stale reservation",
                 () =>
                   writeSimple(
-                    "disputeClaim",
+                    "refundStaleReservation",
                     [reservationId],
                   ),
               )
             }
             disabled={busy}
           >
+            Refund stale reservation
+          </button>
+        ) : null}
+
+        {status === 3 &&
+        canDisputePendingClaim ? (
+          <button
+            onClick={() =>
+              run(
+                "Disputing claim",
+                () =>
+                  disputeClaim(
+                    reservationId,
+                    disputeEvidence,
+                  ),
+                (result) =>
+                  "Claim disputed. Evidence hash: " +
+                  result.evidenceHash +
+                  ". Save salt privately: " +
+                  result.evidenceSalt,
+              )
+            }
+            disabled={
+              busy ||
+              !disputeEvidence.trim()
+            }
+          >
             Dispute no-show claim
           </button>
         ) : null}
 
-        {status === 3 && isParticipant ? (
+        {canFinalizePendingClaim ? (
           <button
             onClick={() =>
               run(
-                "Finalizing claim",
+                "Finalizing undisputed claim",
                 () =>
                   writeSimple(
                     "finalizeUndisputedClaim",
@@ -735,21 +1549,41 @@ export function ManageReservation({
                   ),
               )
             }
-            disabled={
-              busy || !canFinalizePendingClaim
-            }
+            disabled={busy}
           >
             Finalize undisputed claim
           </button>
         ) : null}
 
-        {status === 4 && isArbiter ? (
+        {canRefundExpiredDispute ? (
+          <button
+            onClick={() =>
+              run(
+                "Refunding expired dispute",
+                () =>
+                  writeSimple(
+                    "refundExpiredDispute",
+                    [reservationId],
+                  ),
+              )
+            }
+            disabled={busy}
+          >
+            Refund expired dispute
+          </button>
+        ) : null}
+
+        {canArbiterResolve ? (
           <>
             <button
               onClick={() =>
                 run(
                   "Resolving with both commitments refunded",
-                  () => resolveDispute(reservationId, 4),
+                  () =>
+                    resolveDispute(
+                      reservationId,
+                      4,
+                    ),
                 )
               }
               disabled={busy}
@@ -761,7 +1595,11 @@ export function ManageReservation({
               onClick={() =>
                 run(
                   "Resolving as customer no-show",
-                  () => resolveDispute(reservationId, 2),
+                  () =>
+                    resolveDispute(
+                      reservationId,
+                      2,
+                    ),
                 )
               }
               disabled={busy}
@@ -773,7 +1611,11 @@ export function ManageReservation({
               onClick={() =>
                 run(
                   "Resolving as provider no-show",
-                  () => resolveDispute(reservationId, 3),
+                  () =>
+                    resolveDispute(
+                      reservationId,
+                      3,
+                    ),
                 )
               }
               disabled={busy}
@@ -785,7 +1627,11 @@ export function ManageReservation({
               onClick={() =>
                 run(
                   "Resolving as completed",
-                  () => resolveDispute(reservationId, 1),
+                  () =>
+                    resolveDispute(
+                      reservationId,
+                      1,
+                    ),
                 )
               }
               disabled={busy}
@@ -797,7 +1643,9 @@ export function ManageReservation({
       </div>
 
       {actionHint ? (
-        <div className="actionHint">{actionHint}</div>
+        <div className="actionHint">
+          {actionHint}
+        </div>
       ) : null}
 
       {message ? (

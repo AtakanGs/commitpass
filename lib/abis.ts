@@ -27,9 +27,30 @@ export const commitmentEscrowAbi = [
   { type: "error", name: "TooEarly", inputs: [] },
   { type: "error", name: "TooLate", inputs: [] },
   { type: "error", name: "InvalidOutcome", inputs: [] },
+  { type: "error", name: "InvalidEvidence", inputs: [] },
   {
     type: "error",
     name: "AttendanceNotConfirmed",
+    inputs: [],
+  },
+  {
+    type: "error",
+    name: "PlatformAttestationRequired",
+    inputs: [],
+  },
+  {
+    type: "error",
+    name: "PlatformAttestationNotEnabled",
+    inputs: [],
+  },
+  {
+    type: "error",
+    name: "InvalidAttestationSignature",
+    inputs: [],
+  },
+  {
+    type: "error",
+    name: "AttestationExpired",
     inputs: [],
   },
   {
@@ -52,12 +73,12 @@ export const commitmentEscrowAbi = [
         indexed: true,
       },
       {
-        name: "providerCommitment",
-        type: "uint256",
+        name: "attendanceAttestor",
+        type: "address",
         indexed: false,
       },
       {
-        name: "customerCommitment",
+        name: "commitmentAmount",
         type: "uint256",
         indexed: false,
       },
@@ -74,43 +95,69 @@ export const commitmentEscrowAbi = [
     stateMutability: "nonpayable",
     inputs: [
       { name: "customer", type: "address" },
-      { name: "providerCommitment", type: "uint128" },
-      { name: "customerCommitment", type: "uint128" },
-      { name: "providerCompensation", type: "uint128" },
+      { name: "attendanceAttestor", type: "address" },
+      { name: "commitmentAmount", type: "uint128" },
       { name: "startTime", type: "uint64" },
-      { name: "freeCancellationDeadline", type: "uint64" },
+      {
+        name: "freeCancellationDeadline",
+        type: "uint64",
+      },
       { name: "gracePeriod", type: "uint64" },
+      { name: "claimWindow", type: "uint64" },
       { name: "disputeWindow", type: "uint64" },
+      { name: "arbiterWindow", type: "uint64" },
       { name: "metadataHash", type: "bytes32" },
     ],
-    outputs: [{ name: "reservationId", type: "uint256" }],
+    outputs: [
+      { name: "reservationId", type: "uint256" },
+    ],
   },
   {
     type: "function",
     name: "acceptReservation",
     stateMutability: "nonpayable",
-    inputs: [{ name: "reservationId", type: "uint256" }],
+    inputs: [
+      { name: "reservationId", type: "uint256" },
+    ],
     outputs: [],
   },
   {
     type: "function",
     name: "cancelReservation",
     stateMutability: "nonpayable",
-    inputs: [{ name: "reservationId", type: "uint256" }],
+    inputs: [
+      { name: "reservationId", type: "uint256" },
+    ],
     outputs: [],
   },
   {
     type: "function",
     name: "expireUnacceptedReservation",
     stateMutability: "nonpayable",
-    inputs: [{ name: "reservationId", type: "uint256" }],
+    inputs: [
+      { name: "reservationId", type: "uint256" },
+    ],
     outputs: [],
   },
   {
     type: "function",
     name: "confirmAttendance",
     stateMutability: "nonpayable",
-    inputs: [{ name: "reservationId", type: "uint256" }],
+    inputs: [
+      { name: "reservationId", type: "uint256" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "confirmAttendanceWithAttestation",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "reservationId", type: "uint256" },
+      { name: "participant", type: "address" },
+      { name: "validUntil", type: "uint64" },
+      { name: "signature", type: "bytes" },
+    ],
     outputs: [],
   },
   {
@@ -120,6 +167,7 @@ export const commitmentEscrowAbi = [
     inputs: [
       { name: "reservationId", type: "uint256" },
       { name: "outcome", type: "uint8" },
+      { name: "evidenceHash", type: "bytes32" },
     ],
     outputs: [],
   },
@@ -127,22 +175,38 @@ export const commitmentEscrowAbi = [
     type: "function",
     name: "disputeClaim",
     stateMutability: "nonpayable",
-    inputs: [{ name: "reservationId", type: "uint256" }],
+    inputs: [
+      { name: "reservationId", type: "uint256" },
+      { name: "evidenceHash", type: "bytes32" },
+    ],
     outputs: [],
   },
   {
     type: "function",
     name: "finalizeUndisputedClaim",
     stateMutability: "nonpayable",
-    inputs: [{ name: "reservationId", type: "uint256" }],
+    inputs: [
+      { name: "reservationId", type: "uint256" },
+    ],
     outputs: [],
   },
   {
     type: "function",
-    name: "arbiter",
-    stateMutability: "view",
-    inputs: [],
-    outputs: [{ name: "", type: "address" }],
+    name: "refundStaleReservation",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "reservationId", type: "uint256" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "refundExpiredDispute",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "reservationId", type: "uint256" },
+    ],
+    outputs: [],
   },
   {
     type: "function",
@@ -156,9 +220,20 @@ export const commitmentEscrowAbi = [
   },
   {
     type: "function",
+    name: "arbiter",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [
+      { name: "", type: "address" },
+    ],
+  },
+  {
+    type: "function",
     name: "getReservation",
     stateMutability: "view",
-    inputs: [{ name: "reservationId", type: "uint256" }],
+    inputs: [
+      { name: "reservationId", type: "uint256" },
+    ],
     outputs: [
       {
         name: "",
@@ -166,22 +241,114 @@ export const commitmentEscrowAbi = [
         components: [
           { name: "provider", type: "address" },
           { name: "customer", type: "address" },
-          { name: "providerCommitment", type: "uint128" },
-          { name: "customerCommitment", type: "uint128" },
-          { name: "providerCompensation", type: "uint128" },
+          {
+            name: "attendanceAttestor",
+            type: "address",
+          },
+          {
+            name: "commitmentAmount",
+            type: "uint128",
+          },
           { name: "startTime", type: "uint64" },
-          { name: "freeCancellationDeadline", type: "uint64" },
+          {
+            name: "freeCancellationDeadline",
+            type: "uint64",
+          },
           { name: "gracePeriod", type: "uint64" },
-          { name: "disputeWindow", type: "uint64" },
-          { name: "claimOpenedAt", type: "uint64" },
+          { name: "claimWindow", type: "uint64" },
+          {
+            name: "disputeWindow",
+            type: "uint64",
+          },
+          {
+            name: "arbiterWindow",
+            type: "uint64",
+          },
+          {
+            name: "claimOpenedAt",
+            type: "uint64",
+          },
+          { name: "disputedAt", type: "uint64" },
           { name: "status", type: "uint8" },
-          { name: "pendingOutcome", type: "uint8" },
+          {
+            name: "pendingOutcome",
+            type: "uint8",
+          },
           { name: "finalOutcome", type: "uint8" },
-          { name: "providerConfirmed", type: "bool" },
-          { name: "customerConfirmed", type: "bool" },
+          {
+            name: "providerConfirmed",
+            type: "bool",
+          },
+          {
+            name: "customerConfirmed",
+            type: "bool",
+          },
           { name: "metadataHash", type: "bytes32" },
+          {
+            name: "claimEvidenceHash",
+            type: "bytes32",
+          },
+          {
+            name: "disputeEvidenceHash",
+            type: "bytes32",
+          },
         ],
       },
+    ],
+  },
+  {
+    type: "function",
+    name: "attendanceOpeningTime",
+    stateMutability: "view",
+    inputs: [
+      { name: "reservationId", type: "uint256" },
+    ],
+    outputs: [
+      { name: "", type: "uint256" },
+    ],
+  },
+  {
+    type: "function",
+    name: "attendanceDeadline",
+    stateMutability: "view",
+    inputs: [
+      { name: "reservationId", type: "uint256" },
+    ],
+    outputs: [
+      { name: "", type: "uint256" },
+    ],
+  },
+  {
+    type: "function",
+    name: "claimOpeningDeadline",
+    stateMutability: "view",
+    inputs: [
+      { name: "reservationId", type: "uint256" },
+    ],
+    outputs: [
+      { name: "", type: "uint256" },
+    ],
+  },
+  {
+    type: "function",
+    name: "disputeDeadline",
+    stateMutability: "view",
+    inputs: [
+      { name: "reservationId", type: "uint256" },
+    ],
+    outputs: [
+      { name: "", type: "uint256" },
+    ],
+  },
+  {
+    type: "function",
+    name: "arbiterDeadline",
+    stateMutability: "view",
+    inputs: [
+      { name: "reservationId", type: "uint256" },
+    ],
+    outputs: [
+      { name: "", type: "uint256" },
     ],
   },
 ] as const;

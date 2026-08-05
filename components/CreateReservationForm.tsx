@@ -5,72 +5,182 @@ import {
   useMemo,
   useState,
 } from "react";
-import { isAddress, type Address } from "viem";
+import {
+  isAddress,
+  zeroAddress,
+  type Address,
+} from "viem";
 import {
   createReservation,
   explainContractError,
+  type AttendanceMode,
 } from "@/lib/contract";
-import { SettlementPreview } from "@/components/SettlementPreview";
+import {
+  SettlementPreview,
+} from "@/components/SettlementPreview";
 
 function defaultStart() {
   const date = new Date(
-    Date.now() + 48 * 60 * 60 * 1000,
+    Date.now() +
+      48 * 60 * 60 * 1000,
   );
 
   date.setMinutes(0, 0, 0);
 
   const localDate = new Date(
-    date.getTime() - date.getTimezoneOffset() * 60_000,
+    date.getTime() -
+      date.getTimezoneOffset() * 60_000,
   );
 
-  return localDate.toISOString().slice(0, 16);
+  return localDate
+    .toISOString()
+    .slice(0, 16);
+}
+
+function validUsdcAmount(
+  value: string,
+) {
+  if (
+    !/^\d+(?:\.\d{1,6})?$/.test(
+      value.trim(),
+    )
+  ) {
+    return false;
+  }
+
+  const amount = Number(value);
+
+  return (
+    Number.isFinite(amount) &&
+    amount >= 0.1 &&
+    amount <= 10_000
+  );
+}
+
+function sameAddress(
+  first: string,
+  second: string,
+) {
+  return (
+    first.toLowerCase() ===
+    second.toLowerCase()
+  );
 }
 
 type CreatedReservation = {
   hash: string;
   reservationId: bigint;
   shareUrl: string;
+  attendanceMode: AttendanceMode;
+  attendanceAttestor: Address;
 };
 
 export function CreateReservationForm() {
-  const [customer, setCustomer] = useState("");
+  const [customer, setCustomer] =
+    useState("");
+
   const [title, setTitle] = useState(
     "30-minute mentoring session",
   );
-  const [providerBond, setProviderBond] = useState("5");
-  const [customerBond, setCustomerBond] = useState("2");
-  const [compensation, setCompensation] = useState("2");
-  const [start, setStart] = useState(defaultStart);
-  const [cancelHours, setCancelHours] = useState("24");
-  const [status, setStatus] = useState<string>();
+
+  const [
+    commitmentAmount,
+    setCommitmentAmount,
+  ] = useState("2");
+
+  const [
+    attendanceMode,
+    setAttendanceMode,
+  ] = useState<AttendanceMode>("self");
+
+  const [
+    attendanceAttestor,
+    setAttendanceAttestor,
+  ] = useState("");
+
+  const [start, setStart] =
+    useState(defaultStart);
+
+  const [cancelHours, setCancelHours] =
+    useState("24");
+
+  const [status, setStatus] =
+    useState<string>();
+
   const [created, setCreated] =
     useState<CreatedReservation>();
-  const [copied, setCopied] = useState(false);
-  const [busy, setBusy] = useState(false);
+
+  const [copied, setCopied] =
+    useState(false);
+
+  const [busy, setBusy] =
+    useState(false);
 
   const valid = useMemo(() => {
+    const customerValid =
+      isAddress(customer);
+
+    const cancellationLeadHours =
+      Number(cancelHours);
+
+    const startMs =
+      new Date(start).getTime();
+
+    const cancellationDeadlineMs =
+      startMs -
+      cancellationLeadHours *
+        3_600_000;
+
+    const scheduleValid =
+      Number.isFinite(startMs) &&
+      Number.isFinite(
+        cancellationLeadHours,
+      ) &&
+      cancellationLeadHours >= 1 &&
+      cancellationDeadlineMs >=
+        Date.now() + 15 * 60_000;
+
+    const attestorValid =
+      attendanceMode === "self" ||
+      (
+        isAddress(
+          attendanceAttestor,
+        ) &&
+        !sameAddress(
+          attendanceAttestor,
+          zeroAddress,
+        ) &&
+        (
+          !customerValid ||
+          !sameAddress(
+            attendanceAttestor,
+            customer,
+          )
+        )
+      );
+
     return (
-      isAddress(customer) &&
+      customerValid &&
       title.trim().length > 0 &&
-      Number(providerBond) > 0 &&
-      Number(customerBond) > 0 &&
-      Number(compensation) >= 0 &&
-      Number(compensation) <= Number(providerBond) &&
-      Number(cancelHours) > 0 &&
-      new Date(start).getTime() >
-        Date.now() + Number(cancelHours) * 3_600_000
+      validUsdcAmount(
+        commitmentAmount,
+      ) &&
+      scheduleValid &&
+      attestorValid
     );
   }, [
-    customer,
-    providerBond,
-    customerBond,
-    compensation,
-    start,
+    attendanceAttestor,
+    attendanceMode,
     cancelHours,
+    commitmentAmount,
+    customer,
+    start,
     title,
   ]);
 
-  async function submit(event: FormEvent) {
+  async function submit(
+    event: FormEvent,
+  ) {
     event.preventDefault();
 
     if (!valid) {
@@ -80,26 +190,34 @@ export function CreateReservationForm() {
     setBusy(true);
     setCreated(undefined);
     setCopied(false);
+
     setStatus(
       "Approve the provider commitment in your wallet...",
     );
 
     try {
-      const result = await createReservation({
-        customer: customer as Address,
-        providerCommitment: providerBond,
-        customerCommitment: customerBond,
-        providerCompensation: compensation,
-        startTime: new Date(start),
-        freeCancellationHours: Number(cancelHours),
-        title: title.trim(),
-      });
+      const result =
+        await createReservation({
+          customer:
+            customer as Address,
+          attendanceMode,
+          attendanceAttestor,
+          commitmentAmount,
+          startTime:
+            new Date(start),
+          freeCancellationHours:
+            Number(cancelHours),
+          title: title.trim(),
+        });
 
-      const params = new URLSearchParams({
-        id: result.reservationId.toString(),
-        title: title.trim(),
-        salt: result.metadataSalt,
-      });
+      const params =
+        new URLSearchParams({
+          id:
+            result.reservationId
+              .toString(),
+          title: title.trim(),
+          salt: result.metadataSalt,
+        });
 
       const shareUrl =
         window.location.origin +
@@ -108,17 +226,24 @@ export function CreateReservationForm() {
 
       setCreated({
         hash: result.hash,
-        reservationId: result.reservationId,
+        reservationId:
+          result.reservationId,
         shareUrl,
+        attendanceMode,
+        attendanceAttestor:
+          result.attendanceAttestor,
       });
 
       setStatus(
         "Reservation #" +
-          result.reservationId.toString() +
+          result.reservationId
+            .toString() +
           " created successfully.",
       );
     } catch (caught) {
-      setStatus(explainContractError(caught));
+      setStatus(
+        explainContractError(caught),
+      );
     } finally {
       setBusy(false);
     }
@@ -130,7 +255,11 @@ export function CreateReservationForm() {
     }
 
     try {
-      await navigator.clipboard.writeText(created.shareUrl);
+      await navigator.clipboard
+        .writeText(
+          created.shareUrl,
+        );
+
       setCopied(true);
 
       window.setTimeout(() => {
@@ -144,10 +273,15 @@ export function CreateReservationForm() {
   }
 
   return (
-    <form className="formCard card" onSubmit={submit}>
+    <form
+      className="formCard card"
+      onSubmit={submit}
+    >
       <div className="formHeader">
-        <span>New commitment</span>
-        <span className="secureTag">Testnet only</span>
+        <span>New V3 commitment</span>
+        <span className="secureTag">
+          Final testnet contract
+        </span>
       </div>
 
       <label>
@@ -155,14 +289,17 @@ export function CreateReservationForm() {
         <input
           value={title}
           onChange={(event) =>
-            setTitle(event.target.value)
+            setTitle(
+              event.target.value,
+            )
           }
           maxLength={160}
           required
         />
         <small className="fieldHelp">
-          Use a short label only. Do not include names, contact
-          details or other personal information.
+          Use a short label only. Do not
+          include names, contact details or
+          other personal information.
         </small>
       </label>
 
@@ -171,7 +308,9 @@ export function CreateReservationForm() {
         <input
           value={customer}
           onChange={(event) =>
-            setCustomer(event.target.value)
+            setCustomer(
+              event.target.value,
+            )
           }
           placeholder="0x..."
           spellCheck={false}
@@ -179,78 +318,129 @@ export function CreateReservationForm() {
         />
       </label>
 
-      <div className="fieldGrid">
-        <label>
-          Provider bond
-          <div className="moneyInput">
-            <input
-              value={providerBond}
-              onChange={(event) =>
-                setProviderBond(event.target.value)
-              }
-            />
-            <span>USDC</span>
-          </div>
-        </label>
+      <label>
+        Equal commitment per party
+        <div className="moneyInput">
+          <input
+            value={commitmentAmount}
+            onChange={(event) =>
+              setCommitmentAmount(
+                event.target.value,
+              )
+            }
+            inputMode="decimal"
+          />
+          <span>USDC</span>
+        </div>
+        <small className="fieldHelp">
+          The provider and customer lock the
+          same amount. Allowed range:
+          0.10-10,000 USDC.
+        </small>
+      </label>
 
-        <label>
-          Customer bond
-          <div className="moneyInput">
-            <input
-              value={customerBond}
-              onChange={(event) =>
-                setCustomerBond(event.target.value)
-              }
-            />
-            <span>USDC</span>
-          </div>
-        </label>
+      <label>
+        Attendance verification
+      </label>
+
+      <div className="createdActions">
+        <button
+          className={
+            attendanceMode === "self"
+              ? "button primary"
+              : "button secondary"
+          }
+          type="button"
+          onClick={() =>
+            setAttendanceMode("self")
+          }
+        >
+          Self-attested
+        </button>
+
+        <button
+          className={
+            attendanceMode === "platform"
+              ? "button primary"
+              : "button secondary"
+          }
+          type="button"
+          onClick={() =>
+            setAttendanceMode(
+              "platform",
+            )
+          }
+        >
+          Platform-verified
+        </button>
       </div>
 
+      <p className="formNote">
+        Self-attested reservations let each
+        participant check in directly.
+        Platform-verified reservations require
+        a valid EIP-712 signature from the
+        configured platform signer.
+      </p>
+
+      {attendanceMode === "platform" ? (
+        <label>
+          Platform attestor wallet
+          <input
+            value={attendanceAttestor}
+            onChange={(event) =>
+              setAttendanceAttestor(
+                event.target.value,
+              )
+            }
+            placeholder="0x..."
+            spellCheck={false}
+            required
+          />
+          <small className="fieldHelp">
+            This address becomes immutable for
+            the reservation. It must differ
+            from provider, customer and arbiter.
+          </small>
+        </label>
+      ) : null}
+
       <div className="fieldGrid">
         <label>
-          Provider no-show compensation
-          <div className="moneyInput">
-            <input
-              value={compensation}
-              onChange={(event) =>
-                setCompensation(event.target.value)
-              }
-            />
-            <span>USDC</span>
-          </div>
-        </label>
-
-        <label>
-          Free cancellation window
+          Free cancellation lead
           <div className="moneyInput">
             <input
               value={cancelHours}
               onChange={(event) =>
-                setCancelHours(event.target.value)
+                setCancelHours(
+                  event.target.value,
+                )
               }
+              inputMode="decimal"
             />
             <span>hours</span>
           </div>
         </label>
+
+        <label>
+          Reservation start
+          <input
+            type="datetime-local"
+            value={start}
+            onChange={(event) =>
+              setStart(
+                event.target.value,
+              )
+            }
+            required
+          />
+        </label>
       </div>
 
-      <label>
-        Reservation start
-        <input
-          type="datetime-local"
-          value={start}
-          onChange={(event) =>
-            setStart(event.target.value)
-          }
-          required
-        />
-      </label>
-
       <SettlementPreview
-        providerCommitment={providerBond}
-        customerCommitment={customerBond}
-        providerCompensation={compensation}
+        commitmentAmount={
+          commitmentAmount
+        }
       />
 
       <button
@@ -264,8 +454,8 @@ export function CreateReservationForm() {
       </button>
 
       <p className="formNote">
-        Two wallet confirmations are expected: USDC approval
-        and reservation creation.
+        Two wallet confirmations are expected:
+        USDC approval and reservation creation.
       </p>
 
       {created ? (
@@ -274,11 +464,16 @@ export function CreateReservationForm() {
             <span>Invitation ready</span>
             <strong>
               Reservation #
-              {created.reservationId.toString()}
+              {created.reservationId
+                .toString()}
             </strong>
             <p>
-              Send this verified reservation page to the
-              invited customer.
+              Attendance mode:{" "}
+              {created.attendanceMode ===
+              "platform"
+                ? "Platform-verified"
+                : "Self-attested"}
+              .
             </p>
           </div>
 
@@ -293,9 +488,13 @@ export function CreateReservationForm() {
             <button
               className="button secondary"
               type="button"
-              onClick={copyInvitation}
+              onClick={
+                copyInvitation
+              }
             >
-              {copied ? "Link copied" : "Copy invitation"}
+              {copied
+                ? "Link copied"
+                : "Copy invitation"}
             </button>
           </div>
 
@@ -308,7 +507,8 @@ export function CreateReservationForm() {
             target="_blank"
             rel="noreferrer"
           >
-            View creation transaction on Arcscan
+            View creation transaction on
+            Arcscan
           </a>
         </div>
       ) : null}
