@@ -27,7 +27,7 @@ The contract enforces protocol-level limits rather than relying only on frontend
 | Dispute window | 1–72 hours |
 | Arbiter window | 1 hour–7 days |
 | Cancellation lead | At least 15 minutes |
-| Time between cancellation deadline and start | More than 15 minutes |
+| Cancellation/check-in separation | Cancellation closes at least 15 minutes before check-in opens |
 
 ### No permanent fund lock
 
@@ -37,6 +37,27 @@ V3 adds two permissionless recovery functions:
 - `refundExpiredDispute`: refunds both parties when the arbiter does not resolve a dispute before the arbiter deadline.
 
 Anyone may trigger these functions after their deadlines, but funds can only return to the reservation parties.
+
+### Platform-verified attendance
+
+Each reservation selects one immutable attendance mode at creation:
+
+- `attendanceAttestor == address(0)`: self-attested mode, where each reservation party confirms its own attendance.
+- `attendanceAttestor != address(0)`: platform-verified mode, where direct participant check-in is disabled and a valid platform signature is required.
+
+Platform attestations use EIP-712 typed data with the following signed fields:
+
+- reservation ID
+- participant wallet
+- attestation expiry
+
+The EIP-712 domain binds every signature to the `CommitPass` name, version `3`, the current chain ID and the deployed contract address. A signature therefore cannot be reused for another participant, reservation, network or CommitPass deployment.
+
+Any relayer may submit a valid attestation. The configured platform remains the authority because only its EOA or ERC-1271-compatible smart-contract signature is accepted. The attestor cannot also be the provider, customer or arbiter for that reservation.
+
+If a platform never supplies attestations, neither party can create a no-show claim without confirmed attendance. After the claim window ends, `refundStaleReservation` returns both commitments.
+
+A platform signature proves that the configured platform made the signed assertion. It does not independently prove physical presence or the correctness of the platform's underlying attendance data.
 
 ### Evidence commitments
 
@@ -55,9 +76,19 @@ The arbiter may resolve only a reservation that is already disputed and only bef
 
 V3 deliberately removes the V2 general-purpose emergency refund function. Automated stale-reservation and expired-dispute refunds provide liveness without allowing the arbiter to intervene in every active reservation.
 
+The immutable arbiter address is also prohibited from acting as either reservation party. This prevents an arbiter from resolving a dispute in which the same address is the provider or customer.
+
+### Deployment input validation
+
+The constructor rejects zero addresses, an arbiter/token collision and token addresses without deployed contract code. Reservation creation rejects a start/grace combination that cannot produce a valid check-in opening before timestamp subtraction.
+
+### Non-overlapping lifecycle windows
+
+The free-cancellation deadline must close at least 15 minutes before the attendance window opens. This prevents acceptance or penalty-free cancellation from overlapping with check-in and keeps the state machine understandable for both parties.
+
 ## Remaining trust assumptions
 
-V3 does not prove physical attendance. Attendance remains a wallet self-attestation unless a booking platform supplies a stronger signed attestation layer.
+V3 supports self-attested and platform-verified attendance. Platform verification proves which configured platform signed the attendance assertion, but the protocol still trusts that platform’s underlying attendance records.
 
 The arbiter remains one immutable address. A production deployment should use a multisig or governed arbitration module and should undergo an independent audit.
 

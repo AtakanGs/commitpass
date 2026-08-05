@@ -43,6 +43,7 @@ module.exports = {
     version: "0.8.26",
     settings: {
       optimizer: { enabled: true, runs: 500 },
+      evmVersion: "cancun",
     },
   },
   networks: {

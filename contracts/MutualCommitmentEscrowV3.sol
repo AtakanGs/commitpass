@@ -4,12 +4,18 @@ pragma solidity ^0.8.26;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import {EIP712} from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
+import {SignatureChecker} from "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
 
 /// @title MutualCommitmentEscrowV3
 /// @notice Symmetric two-sided USDC commitments for scarce reservations and services.
 /// @dev Metadata and evidence must be salted offchain before their hashes are submitted.
-contract MutualCommitmentEscrowV3 is ReentrancyGuard {
+contract MutualCommitmentEscrowV3 is ReentrancyGuard, EIP712 {
     using SafeERC20 for IERC20;
+
+    bytes32 public constant ATTENDANCE_ATTESTATION_TYPEHASH = keccak256(
+        "AttendanceAttestation(uint256 reservationId,address participant,uint64 validUntil)"
+    );
 
     uint128 public constant MIN_COMMITMENT = 100_000; // 0.10 USDC
     uint128 public constant MAX_COMMITMENT = 10_000_000_000; // 10,000 USDC
@@ -45,6 +51,7 @@ contract MutualCommitmentEscrowV3 is ReentrancyGuard {
     struct Reservation {
         address provider;
         address customer;
+        address attendanceAttestor;
         uint128 commitmentAmount;
         uint64 startTime;
         uint64 freeCancellationDeadline;
@@ -80,16 +87,28 @@ contract MutualCommitmentEscrowV3 is ReentrancyGuard {
     error InvalidOutcome();
     error InvalidEvidence();
     error AttendanceNotConfirmed();
+    error PlatformAttestationRequired();
+    error PlatformAttestationNotEnabled();
+    error InvalidAttestationSignature();
+    error AttestationExpired();
 
     event ReservationCreated(
         uint256 indexed reservationId,
         address indexed provider,
         address indexed customer,
+        address attendanceAttestor,
         uint256 commitmentAmount,
         bytes32 metadataHash
     );
     event ReservationAccepted(uint256 indexed reservationId, address indexed customer);
     event AttendanceConfirmed(uint256 indexed reservationId, address indexed party);
+    event PlatformAttendanceConfirmed(
+        uint256 indexed reservationId,
+        address indexed participant,
+        address indexed attestor,
+        address relayer,
+        bytes32 digest
+    );
     event ReservationCancelled(uint256 indexed reservationId, address indexed cancelledBy);
     event ReservationExpired(uint256 indexed reservationId);
     event NoShowClaimOpened(
@@ -109,8 +128,16 @@ contract MutualCommitmentEscrowV3 is ReentrancyGuard {
     event ExpiredDisputeRefunded(uint256 indexed reservationId);
     event ReservationResolved(uint256 indexed reservationId, Outcome outcome);
 
-    constructor(address usdcAddress, address arbiterAddress) {
-        if (usdcAddress == address(0) || arbiterAddress == address(0)) {
+    constructor(
+        address usdcAddress,
+        address arbiterAddress
+    ) EIP712("CommitPass", "3") {
+        if (
+            usdcAddress == address(0)
+                || arbiterAddress == address(0)
+                || usdcAddress == arbiterAddress
+                || usdcAddress.code.length == 0
+        ) {
             revert InvalidAddress();
         }
 
@@ -120,6 +147,7 @@ contract MutualCommitmentEscrowV3 is ReentrancyGuard {
 
     function createReservation(
         address customer,
+        address attendanceAttestor,
         uint128 commitmentAmount,
         uint64 startTime,
         uint64 freeCancellationDeadline,
@@ -129,7 +157,20 @@ contract MutualCommitmentEscrowV3 is ReentrancyGuard {
         uint64 arbiterWindow,
         bytes32 metadataHash
     ) external nonReentrant returns (uint256 reservationId) {
-        if (customer == address(0) || customer == msg.sender) {
+        if (
+            customer == address(0)
+                || customer == msg.sender
+                || customer == arbiter
+                || msg.sender == arbiter
+                || (
+                    attendanceAttestor != address(0)
+                        && (
+                            attendanceAttestor == msg.sender
+                                || attendanceAttestor == customer
+                                || attendanceAttestor == arbiter
+                        )
+                )
+        ) {
             revert InvalidAddress();
         }
 
@@ -144,12 +185,21 @@ contract MutualCommitmentEscrowV3 is ReentrancyGuard {
             revert InvalidEvidence();
         }
 
+        if (uint256(startTime) <= uint256(gracePeriod)) {
+            revert InvalidSchedule();
+        }
+
+        uint256 cancellationDeadline =
+            uint256(freeCancellationDeadline);
+        uint256 checkInOpensAt =
+            uint256(startTime) - uint256(gracePeriod);
+
         if (
-            uint256(freeCancellationDeadline)
+            cancellationDeadline
                 < block.timestamp + MIN_CANCELLATION_LEAD
-                || uint256(startTime)
-                    <= uint256(freeCancellationDeadline)
-                        + MIN_CANCELLATION_LEAD
+                || cancellationDeadline
+                    + MIN_CANCELLATION_LEAD
+                    > checkInOpensAt
                 || gracePeriod < MIN_GRACE_PERIOD
                 || gracePeriod > MAX_GRACE_PERIOD
                 || claimWindow < MIN_CLAIM_WINDOW
@@ -167,6 +217,7 @@ contract MutualCommitmentEscrowV3 is ReentrancyGuard {
         reservations[reservationId] = Reservation({
             provider: msg.sender,
             customer: customer,
+            attendanceAttestor: attendanceAttestor,
             commitmentAmount: commitmentAmount,
             startTime: startTime,
             freeCancellationDeadline: freeCancellationDeadline,
@@ -196,6 +247,7 @@ contract MutualCommitmentEscrowV3 is ReentrancyGuard {
             reservationId,
             msg.sender,
             customer,
+            attendanceAttestor,
             commitmentAmount,
             metadataHash
         );
@@ -302,47 +354,67 @@ contract MutualCommitmentEscrowV3 is ReentrancyGuard {
     ) external nonReentrant {
         Reservation storage reservation = _reservation(reservationId);
 
-        if (reservation.status != Status.Active) {
-            revert InvalidState();
+        if (reservation.attendanceAttestor != address(0)) {
+            revert PlatformAttestationRequired();
         }
+
+        _confirmAttendance(
+            reservationId,
+            reservation,
+            msg.sender
+        );
+    }
+
+    function confirmAttendanceWithAttestation(
+        uint256 reservationId,
+        address participant,
+        uint64 validUntil,
+        bytes calldata signature
+    ) external nonReentrant {
+        Reservation storage reservation = _reservation(reservationId);
+
+        if (reservation.attendanceAttestor == address(0)) {
+            revert PlatformAttestationNotEnabled();
+        }
+
+        _validateAttendance(
+            reservation,
+            participant
+        );
+
+        if (block.timestamp > validUntil) {
+            revert AttestationExpired();
+        }
+
+        bytes32 digest = _attendanceAttestationDigest(
+            reservationId,
+            participant,
+            validUntil
+        );
 
         if (
-            block.timestamp + reservation.gracePeriod
-                < reservation.startTime
+            !SignatureChecker.isValidSignatureNow(
+                reservation.attendanceAttestor,
+                digest,
+                signature
+            )
         ) {
-            revert TooEarly();
+            revert InvalidAttestationSignature();
         }
 
-        if (block.timestamp > _attendanceDeadline(reservation)) {
-            revert TooLate();
-        }
+        _recordAttendance(
+            reservationId,
+            reservation,
+            participant
+        );
 
-        if (msg.sender == reservation.provider) {
-            if (reservation.providerConfirmed) {
-                revert InvalidState();
-            }
-            reservation.providerConfirmed = true;
-        } else if (msg.sender == reservation.customer) {
-            if (reservation.customerConfirmed) {
-                revert InvalidState();
-            }
-            reservation.customerConfirmed = true;
-        } else {
-            revert Unauthorized();
-        }
-
-        emit AttendanceConfirmed(reservationId, msg.sender);
-
-        if (
-            reservation.providerConfirmed
-                && reservation.customerConfirmed
-        ) {
-            _settle(
-                reservationId,
-                reservation,
-                Outcome.Completed
-            );
-        }
+        emit PlatformAttendanceConfirmed(
+            reservationId,
+            participant,
+            reservation.attendanceAttestor,
+            msg.sender,
+            digest
+        );
     }
 
     function openNoShowClaim(
@@ -570,6 +642,38 @@ contract MutualCommitmentEscrowV3 is ReentrancyGuard {
         return _reservation(reservationId);
     }
 
+    function attendanceAttestationDigest(
+        uint256 reservationId,
+        address participant,
+        uint64 validUntil
+    ) external view returns (bytes32) {
+        Reservation storage reservation = _reservation(reservationId);
+
+        if (
+            participant != reservation.provider
+                && participant != reservation.customer
+        ) {
+            revert InvalidAddress();
+        }
+
+        return
+            _attendanceAttestationDigest(
+                reservationId,
+                participant,
+                validUntil
+            );
+    }
+
+    function attendanceOpeningTime(
+        uint256 reservationId
+    ) external view returns (uint256) {
+        Reservation storage reservation = _reservation(reservationId);
+
+        return
+            uint256(reservation.startTime)
+                - reservation.gracePeriod;
+    }
+
     function attendanceDeadline(
         uint256 reservationId
     ) external view returns (uint256) {
@@ -612,6 +716,101 @@ contract MutualCommitmentEscrowV3 is ReentrancyGuard {
         return
             uint256(reservation.disputedAt)
                 + reservation.arbiterWindow;
+    }
+
+    function _confirmAttendance(
+        uint256 reservationId,
+        Reservation storage reservation,
+        address participant
+    ) private {
+        _validateAttendance(
+            reservation,
+            participant
+        );
+
+        _recordAttendance(
+            reservationId,
+            reservation,
+            participant
+        );
+    }
+
+    function _validateAttendance(
+        Reservation storage reservation,
+        address participant
+    ) private view {
+        if (reservation.status != Status.Active) {
+            revert InvalidState();
+        }
+
+        if (
+            block.timestamp + reservation.gracePeriod
+                < reservation.startTime
+        ) {
+            revert TooEarly();
+        }
+
+        if (block.timestamp > _attendanceDeadline(reservation)) {
+            revert TooLate();
+        }
+
+        if (participant == reservation.provider) {
+            if (reservation.providerConfirmed) {
+                revert InvalidState();
+            }
+        } else if (participant == reservation.customer) {
+            if (reservation.customerConfirmed) {
+                revert InvalidState();
+            }
+        } else {
+            revert Unauthorized();
+        }
+    }
+
+    function _recordAttendance(
+        uint256 reservationId,
+        Reservation storage reservation,
+        address participant
+    ) private {
+        if (participant == reservation.provider) {
+            reservation.providerConfirmed = true;
+        } else {
+            reservation.customerConfirmed = true;
+        }
+
+        emit AttendanceConfirmed(
+            reservationId,
+            participant
+        );
+
+        if (
+            reservation.providerConfirmed
+                && reservation.customerConfirmed
+        ) {
+            _settle(
+                reservationId,
+                reservation,
+                Outcome.Completed
+            );
+        }
+    }
+
+    function _attendanceAttestationDigest(
+        uint256 reservationId,
+        address participant,
+        uint64 validUntil
+    ) private view returns (bytes32) {
+        return
+            _hashTypedDataV4(
+                keccak256(
+                    abi.encode(
+                        ATTENDANCE_ATTESTATION_TYPEHASH,
+                        reservationId,
+                        participant,
+                        validUntil
+                    )
+                )
+            );
     }
 
     function _settle(

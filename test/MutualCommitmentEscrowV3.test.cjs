@@ -95,6 +95,7 @@ describe("MutualCommitmentEscrowV3", function () {
       .connect(ctx.provider)
       .createReservation(
         ctx.customer.address,
+        overrides.attendanceAttestor ?? ethers.ZeroAddress,
         overrides.commitmentAmount ?? COMMITMENT,
         timing.startTime,
         timing.cancellationDeadline,

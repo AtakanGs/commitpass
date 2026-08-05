@@ -130,6 +130,7 @@ describe(
         .connect(ctx.provider)
         .createReservation(
           overrides.customer ?? ctx.customer.address,
+          overrides.attendanceAttestor ?? ethers.ZeroAddress,
           overrides.commitmentAmount ?? COMMITMENT,
           timing.startTime,
           timing.cancellationDeadline,
@@ -188,6 +189,7 @@ describe(
           .connect(below.provider)
           .createReservation(
             below.customer.address,
+            ethers.ZeroAddress,
             99_999,
             belowTiming.startTime,
             belowTiming.cancellationDeadline,
@@ -208,6 +210,7 @@ describe(
           .connect(above.provider)
           .createReservation(
             above.customer.address,
+            ethers.ZeroAddress,
             10_000_000_001n,
             aboveTiming.startTime,
             aboveTiming.cancellationDeadline,

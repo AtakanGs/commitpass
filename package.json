@@ -24,9 +24,10 @@
     "circle:wallet:create": "node scripts/create-circle-arc-wallet.cjs",
     "circle:wallet:balance": "node scripts/check-circle-wallet-balance.cjs",
     "circle:reservation:create": "node scripts/create-circle-commitpass-reservation.cjs",
-    "contracts:test:v3": "hardhat test test/MutualCommitmentEscrowV3.test.cjs test/MutualCommitmentEscrowV3.security.test.cjs",
+    "contracts:test:v3": "hardhat test test/MutualCommitmentEscrowV3.test.cjs test/MutualCommitmentEscrowV3.security.test.cjs test/MutualCommitmentEscrowV3.premerge.test.cjs test/MutualCommitmentEscrowV3.final-hardening.test.cjs test/MutualCommitmentEscrowV3.platform-attestation.test.cjs",
     "deploy:arc:v3": "hardhat run scripts/deploy-v3.cjs --network arcTestnet",
-    "verify:arcscan:v3:source": "node scripts/verify-arcscan-v3-source.cjs"
+    "verify:arcscan:v3:source": "node scripts/verify-arcscan-v3-source.cjs",
+    "v3:attestation:create": "node scripts/create-v3-attendance-attestation.cjs"
   },
   "dependencies": {
     "@circle-fin/developer-controlled-wallets": "^10.8.0",
