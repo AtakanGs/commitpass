@@ -5,11 +5,8 @@ import {
   useState,
 } from "react";
 import {
-  isAddress,
-  isHex,
   zeroAddress,
   type Address,
-  type Hex,
 } from "viem";
 import {
   ReservationActivity,
@@ -19,7 +16,6 @@ import {
 } from "@/components/SettlementPreview";
 import {
   acceptReservation,
-  confirmAttendanceWithAttestation,
   disputeClaim,
   explainContractError,
   formatUsdc,
@@ -140,20 +136,6 @@ export function ManageReservation({
     setDisputeEvidence,
   ] = useState("");
 
-  const [
-    attestationParticipant,
-    setAttestationParticipant,
-  ] = useState("");
-
-  const [
-    attestationValidUntil,
-    setAttestationValidUntil,
-  ] = useState("");
-
-  const [
-    attestationSignature,
-    setAttestationSignature,
-  ] = useState("");
 
   useEffect(() => {
     setNow(Date.now());
@@ -278,24 +260,6 @@ export function ManageReservation({
         connectedAccount,
       );
 
-      if (
-        !attestationParticipant &&
-        connectedAccount &&
-        (
-          sameAddress(
-            connectedAccount,
-            value.provider,
-          ) ||
-          sameAddress(
-            connectedAccount,
-            value.customer,
-          )
-        )
-      ) {
-        setAttestationParticipant(
-          connectedAccount,
-        );
-      }
 
       if (announce) {
         setMessage(undefined);
@@ -345,6 +309,9 @@ export function ManageReservation({
           sessionPolicy,
         ),
     );
+
+  const invitationTermsVerified =
+    !autoLoad || metadataVerified;
 
   const nowSeconds =
     Math.floor(now / 1000);
@@ -513,20 +480,6 @@ export function ManageReservation({
     nowSeconds <=
       arbiterDeadline;
 
-  const attestationReady =
-    isAddress(
-      attestationParticipant,
-    ) &&
-    /^\d+$/.test(
-      attestationValidUntil,
-    ) &&
-    Number(
-      attestationValidUntil,
-    ) > nowSeconds &&
-    isHex(
-      attestationSignature,
-    ) &&
-    attestationSignature.length > 2;
 
   let roleLabel =
     "Wallet not connected";
@@ -556,7 +509,7 @@ export function ManageReservation({
     roleLabel =
       "Observer or relayer";
     roleDescription =
-      "This wallet may inspect state and submit permissionless lifecycle calls or a valid platform signature.";
+      "This wallet can review the reservation. Participant actions remain unavailable.";
   }
 
   let actionHint:
@@ -574,9 +527,11 @@ export function ManageReservation({
     isCustomer
   ) {
     actionHint =
-      isBeforeCancellationDeadline
-        ? "Accept before the free-cancellation deadline to activate the reservation."
-        : "The invitation acceptance deadline has passed.";
+      !invitationTermsVerified
+        ? "This invitation cannot be accepted because its shared terms could not be verified. Ask the sender for the original invitation link."
+        : isBeforeCancellationDeadline
+          ? "Review the summary, then accept and lock the same refundable deposit."
+          : "The invitation acceptance deadline has passed.";
   } else if (
     status === 1 &&
     isProvider
@@ -609,7 +564,7 @@ export function ManageReservation({
       isPlatformVerified
     ) {
       actionHint =
-        "A valid platform signature is required. Any relayer may submit it.";
+        "CommitPass will record verified attendance automatically. No manual signature is required.";
     } else if (
       isCheckInOpen
     ) {
@@ -620,7 +575,7 @@ export function ManageReservation({
     ) {
       actionHint =
         connectedPartyConfirmed
-          ? "You may open a no-show claim with a salted evidence reference."
+          ? "You may report that the other participant did not attend."
           : "You cannot claim because your own attendance was not recorded.";
     } else if (
       canRefundStale
@@ -716,12 +671,12 @@ export function ManageReservation({
       <div className="formHeader">
         <span>
           {autoLoad
-            ? "V3 reservation details"
-            : "V3 reservation console"}
+            ? "Reservation details"
+            : "Reservation lookup"}
         </span>
 
         <span className="secureTag">
-          Final contract
+          Arc Testnet
         </span>
       </div>
 
@@ -778,8 +733,8 @@ export function ManageReservation({
                 }
               >
                 {metadataVerified
-                  ? "Verified against the salted onchain metadata reference"
-                  : "Shared label does not match the onchain metadata reference"}
+                  ? "Invitation details verified"
+                  : "Invitation details could not be verified"}
               </small>
             </div>
           ) : null}
@@ -787,7 +742,7 @@ export function ManageReservation({
           {sessionPolicy ? (
             <div className="reservationTitle">
               <span>
-                Digital session policy
+                Session terms
               </span>
 
               <h3>
@@ -796,15 +751,14 @@ export function ManageReservation({
               </h3>
 
               <p>
-                Issues may be reported during
-                the first {" "}
-                {sessionPolicy.issueWindowMinutes}
-                minutes. Completion requires at
-                least {" "}
+                A {sessionPolicy.scheduledMinutes}
+                -minute session is completed after
+                both participants spend at least{" "}
                 {sessionPolicy
                   .completionThresholdMinutes}
-                minutes of verified simultaneous
-                participation.
+                verified minutes together. A{" "}
+                {sessionPolicy.issueWindowMinutes}
+                -minute arrival window is included.
               </p>
 
               <small
@@ -815,9 +769,25 @@ export function ManageReservation({
                 }
               >
                 {metadataVerified
-                  ? "These session terms are committed by the salted onchain metadata hash"
-                  : "These shared session terms could not be verified against the onchain metadata hash"}
+                  ? "These are the verified terms accepted by both participants"
+                  : "Do not accept this invitation until the sender provides the original link"}
               </small>
+            </div>
+          ) : null}
+
+          {autoLoad &&
+          !metadataVerified ? (
+            <div className="transactionStatus">
+              <strong>
+                Invitation verification failed
+              </strong>
+              <p>
+                The shared title or session terms do
+                not match the reservation record.
+                Acceptance is disabled. Ask the sender
+                to copy the original invitation link
+                again.
+              </p>
             </div>
           ) : null}
 
@@ -889,32 +859,19 @@ export function ManageReservation({
 
               <div>
                 <dt>
-                  Attendance mode
+                  Attendance verification
                 </dt>
                 <dd>
                   {isPlatformVerified
-                    ? "Platform-verified"
-                    : "Self-attested"}
+                    ? "Automatic"
+                    : "Manual"}
                 </dd>
               </div>
 
-              {isPlatformVerified ? (
-                <div>
-                  <dt>
-                    Platform attestor
-                  </dt>
-                  <dd>
-                    {compact(
-                      reservation
-                        .attendanceAttestor,
-                    )}
-                  </dd>
-                </div>
-              ) : null}
 
               <div>
                 <dt>
-                  Commitment per party
+                  Refundable deposit per person
                 </dt>
                 <dd>
                   {formatUsdc(
@@ -926,7 +883,7 @@ export function ManageReservation({
 
               <div>
                 <dt>
-                  Total locked when active
+                  Total protected amount
                 </dt>
                 <dd>
                   {formatUsdc(
@@ -961,7 +918,7 @@ export function ManageReservation({
 
               <div>
                 <dt>
-                  Check-in window
+                  Attendance window
                 </dt>
                 <dd>
                   {formatDate(
@@ -976,7 +933,7 @@ export function ManageReservation({
 
               <div>
                 <dt>
-                  Claim opening deadline
+                  Last time to report a no-show
                 </dt>
                 <dd>
                   {formatDate(
@@ -1186,98 +1143,20 @@ export function ManageReservation({
             <div className="roleBanner">
               <div className="roleBannerTop">
                 <span>
-                  Platform attestation relay
+                  Automatic attendance
                 </span>
                 <strong>
-                  Signed EIP-712
+                  No action needed
                 </strong>
               </div>
 
               <p>
-                Paste the participant,
-                expiration and signature
-                generated by the configured
-                platform signer. Any connected
-                wallet may relay it.
+                CommitPass records verified
+                participation through the configured
+                session service. Signatures and
+                settlement details stay in the
+                background.
               </p>
-
-              <label>
-                Participant wallet
-                <input
-                  value={
-                    attestationParticipant
-                  }
-                  onChange={(event) =>
-                    setAttestationParticipant(
-                      event.target.value,
-                    )
-                  }
-                  placeholder="0x..."
-                  spellCheck={false}
-                />
-              </label>
-
-              <label>
-                Valid-until Unix timestamp
-                <input
-                  value={
-                    attestationValidUntil
-                  }
-                  onChange={(event) =>
-                    setAttestationValidUntil(
-                      event.target.value
-                        .replace(
-                          /\D/g,
-                          "",
-                        ),
-                    )
-                  }
-                  placeholder="1780000000"
-                  inputMode="numeric"
-                />
-              </label>
-
-              <label>
-                Platform signature
-                <input
-                  value={
-                    attestationSignature
-                  }
-                  onChange={(event) =>
-                    setAttestationSignature(
-                      event.target.value,
-                    )
-                  }
-                  placeholder="0x..."
-                  spellCheck={false}
-                />
-              </label>
-
-              <button
-                className="button secondary"
-                type="button"
-                onClick={() =>
-                  run(
-                    "Submitting platform attendance",
-                    () =>
-                      confirmAttendanceWithAttestation(
-                        reservationId,
-                        attestationParticipant as Address,
-                        BigInt(
-                          attestationValidUntil,
-                        ),
-                        attestationSignature as Hex,
-                      ),
-                  )
-                }
-                disabled={
-                  busy ||
-                  !isCheckInOpen ||
-                  !attestationReady
-                }
-              >
-                Submit signed attendance
-              </button>
             </div>
           ) : null}
 
@@ -1373,10 +1252,11 @@ export function ManageReservation({
             }
             disabled={
               busy ||
-              !isBeforeCancellationDeadline
+              !isBeforeCancellationDeadline ||
+              !invitationTermsVerified
             }
           >
-            Accept equal commitment
+            Accept and lock the same deposit
           </button>
         ) : null}
 
@@ -1430,7 +1310,7 @@ export function ManageReservation({
           <button
             onClick={() =>
               run(
-                "Confirming self-attested attendance",
+                "Confirming attendance",
                 () =>
                   writeSimple(
                     "confirmAttendance",
@@ -1465,7 +1345,7 @@ export function ManageReservation({
               !isBeforeCancellationDeadline
             }
           >
-            Cancel early
+            Cancel reservation
           </button>
         ) : null}
 
