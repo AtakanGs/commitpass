@@ -311,7 +311,7 @@ export function ManageReservation({
     );
 
   const invitationTermsVerified =
-    !autoLoad || metadataVerified;
+    metadataVerified;
 
   const nowSeconds =
     Math.floor(now / 1000);
