@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   FormEvent,
@@ -26,10 +26,22 @@ import {
   type DigitalSessionPolicy,
 } from "@/lib/sessionPolicy";
 
+const PLATFORM_ATTESTOR =
+  process.env
+    .NEXT_PUBLIC_COMMITPASS_DEMO_ATTESTOR_ADDRESS ??
+  "";
+
+const DURATION_PRESETS = [
+  15,
+  30,
+  45,
+  60,
+  90,
+] as const;
+
 function defaultStart() {
   const date = new Date(
-    Date.now() +
-      48 * 60 * 60 * 1000,
+    Date.now() + 48 * 60 * 60 * 1000,
   );
 
   date.setMinutes(0, 0, 0);
@@ -44,9 +56,7 @@ function defaultStart() {
     .slice(0, 16);
 }
 
-function validUsdcAmount(
-  value: string,
-) {
+function validUsdcAmount(value: string) {
   if (
     !/^\d+(?:\.\d{1,6})?$/.test(
       value.trim(),
@@ -74,6 +84,54 @@ function sameAddress(
   );
 }
 
+function recommendedPolicy(
+  scheduledMinutes: number,
+): DigitalSessionPolicy {
+  const presets: Record<
+    number,
+    Pick<
+      DigitalSessionPolicy,
+      | "issueWindowMinutes"
+      | "completionThresholdMinutes"
+    >
+  > = {
+    15: {
+      issueWindowMinutes: 3,
+      completionThresholdMinutes: 10,
+    },
+    30: {
+      issueWindowMinutes: 5,
+      completionThresholdMinutes: 20,
+    },
+    45: {
+      issueWindowMinutes: 5,
+      completionThresholdMinutes: 30,
+    },
+    60: {
+      issueWindowMinutes: 10,
+      completionThresholdMinutes: 40,
+    },
+    90: {
+      issueWindowMinutes: 10,
+      completionThresholdMinutes: 60,
+    },
+  };
+
+  const selected =
+    presets[scheduledMinutes] ??
+    presets[
+      DEFAULT_DIGITAL_SESSION_POLICY
+        .scheduledMinutes
+    ];
+
+  return {
+    version: 1,
+    kind: "digital-session",
+    scheduledMinutes,
+    ...selected,
+  };
+}
+
 type CreatedReservation = {
   hash: string;
   reservationId: bigint;
@@ -84,11 +142,18 @@ type CreatedReservation = {
 };
 
 export function CreateReservationForm() {
+  const platformVerificationAvailable =
+    isAddress(PLATFORM_ATTESTOR) &&
+    !sameAddress(
+      PLATFORM_ATTESTOR,
+      zeroAddress,
+    );
+
   const [customer, setCustomer] =
     useState("");
 
   const [title, setTitle] = useState(
-    "30-minute mentoring session",
+    "Online session",
   );
 
   const [
@@ -99,7 +164,11 @@ export function CreateReservationForm() {
   const [
     attendanceMode,
     setAttendanceMode,
-  ] = useState<AttendanceMode>("self");
+  ] = useState<AttendanceMode>(
+    platformVerificationAvailable
+      ? "platform"
+      : "self",
+  );
 
   const [
     scheduledMinutes,
@@ -149,11 +218,6 @@ export function CreateReservationForm() {
   const [busy, setBusy] =
     useState(false);
 
-  const platformAttestor =
-    process.env
-      .NEXT_PUBLIC_COMMITPASS_DEMO_ATTESTOR_ADDRESS ??
-    "";
-
   const sessionPolicy = useMemo(
     () => ({
       version: 1 as const,
@@ -201,13 +265,14 @@ export function CreateReservationForm() {
         3_600_000;
 
     const requiredCancellationLeadMinutes =
+      attendanceMode === "platform" &&
       sessionPolicyValidation.valid
         ? attendanceGraceSeconds(
             sessionPolicy,
           ) /
             60 +
           15
-        : Number.POSITIVE_INFINITY;
+        : 30;
 
     const scheduleValid =
       Number.isFinite(startMs) &&
@@ -222,17 +287,11 @@ export function CreateReservationForm() {
     const attestorValid =
       attendanceMode === "self" ||
       (
-        isAddress(
-          platformAttestor,
-        ) &&
-        !sameAddress(
-          platformAttestor,
-          zeroAddress,
-        ) &&
+        platformVerificationAvailable &&
         (
           !customerValid ||
           !sameAddress(
-            platformAttestor,
+            PLATFORM_ATTESTOR,
             customer,
           )
         )
@@ -256,12 +315,31 @@ export function CreateReservationForm() {
     cancelHours,
     commitmentAmount,
     customer,
-    platformAttestor,
+    platformVerificationAvailable,
     sessionPolicy,
     sessionPolicyValidation.valid,
     start,
     title,
   ]);
+
+  function chooseDuration(
+    duration: number,
+  ) {
+    const policy =
+      recommendedPolicy(duration);
+
+    setScheduledMinutes(
+      String(policy.scheduledMinutes),
+    );
+    setIssueWindowMinutes(
+      String(policy.issueWindowMinutes),
+    );
+    setCompletionThresholdMinutes(
+      String(
+        policy.completionThresholdMinutes,
+      ),
+    );
+  }
 
   async function submit(
     event: FormEvent,
@@ -277,7 +355,7 @@ export function CreateReservationForm() {
     setCopied(false);
 
     setStatus(
-      "Approve the provider commitment in your wallet...",
+      "Confirm the security deposit in your wallet...",
     );
 
     try {
@@ -294,7 +372,7 @@ export function CreateReservationForm() {
           attendanceAttestor:
             attendanceMode ===
             "platform"
-              ? platformAttestor
+              ? PLATFORM_ATTESTOR
               : undefined,
           commitmentAmount,
           startTime:
@@ -347,10 +425,7 @@ export function CreateReservationForm() {
       });
 
       setStatus(
-        "Reservation #" +
-          result.reservationId
-            .toString() +
-          " created successfully.",
+        "Invitation created. Share the link with the other participant.",
       );
     } catch (caught) {
       setStatus(
@@ -390,14 +465,19 @@ export function CreateReservationForm() {
       onSubmit={submit}
     >
       <div className="formHeader">
-        <span>New V3 commitment</span>
+        <span>Create a protected session</span>
         <span className="secureTag">
-          Final testnet contract
+          Arc Testnet
         </span>
       </div>
 
+      <p className="formNote">
+        Choose the session details. Both parties
+        lock the same refundable security deposit.
+      </p>
+
       <label>
-        Session title
+        What is the session for?
         <input
           value={title}
           onChange={(event) =>
@@ -406,17 +486,17 @@ export function CreateReservationForm() {
             )
           }
           maxLength={160}
+          placeholder="Online lesson, consultation or mentoring"
           required
         />
         <small className="fieldHelp">
-          Use a short label only. Do not
-          include names, contact details or
-          other personal information.
+          Use a short label. Do not include names,
+          contact details or private information.
         </small>
       </label>
 
       <label>
-        Customer wallet
+        Other participant&apos;s wallet
         <input
           value={customer}
           onChange={(event) =>
@@ -428,185 +508,15 @@ export function CreateReservationForm() {
           spellCheck={false}
           required
         />
-      </label>
-
-      <label>
-        Equal commitment per party
-        <div className="moneyInput">
-          <input
-            value={commitmentAmount}
-            onChange={(event) =>
-              setCommitmentAmount(
-                event.target.value,
-              )
-            }
-            inputMode="decimal"
-          />
-          <span>USDC</span>
-        </div>
         <small className="fieldHelp">
-          The provider and customer lock the
-          same amount. Allowed range:
-          0.10-10,000 USDC.
+          Ask the invited participant to copy their
+          connected wallet address.
         </small>
       </label>
 
       <div className="fieldGrid">
         <label>
-          Scheduled session
-          <div className="moneyInput">
-            <input
-              value={scheduledMinutes}
-              onChange={(event) =>
-                setScheduledMinutes(
-                  event.target.value,
-                )
-              }
-              inputMode="numeric"
-            />
-            <span>minutes</span>
-          </div>
-        </label>
-
-        <label>
-          Issue window
-          <div className="moneyInput">
-            <input
-              value={issueWindowMinutes}
-              onChange={(event) =>
-                setIssueWindowMinutes(
-                  event.target.value,
-                )
-              }
-              inputMode="numeric"
-            />
-            <span>minutes</span>
-          </div>
-        </label>
-      </div>
-
-      <label>
-        Completion threshold
-        <div className="moneyInput">
-          <input
-            value={
-              completionThresholdMinutes
-            }
-            onChange={(event) =>
-              setCompletionThresholdMinutes(
-                event.target.value,
-              )
-            }
-            inputMode="numeric"
-          />
-          <span>minutes</span>
-        </div>
-        <small className="fieldHelp">
-          The session completes only after
-          both parties share the authenticated
-          session for this long. The default
-          30-minute policy uses a 5-minute
-          issue window and a 20-minute
-          completion threshold. These terms
-          are committed and enforceable by the
-          attendance adapter only in platform-
-          verified mode.
-        </small>
-        {!sessionPolicyValidation.valid ? (
-          <small className="metadataUnverified">
-            {sessionPolicyValidation.errors[0]}
-          </small>
-        ) : null}
-      </label>
-
-      <label>
-        Attendance verification
-      </label>
-
-      <div className="createdActions">
-        <button
-          className={
-            attendanceMode === "self"
-              ? "button primary"
-              : "button secondary"
-          }
-          type="button"
-          onClick={() =>
-            setAttendanceMode("self")
-          }
-        >
-          Manual check-in
-        </button>
-
-        <button
-          className={
-            attendanceMode === "platform"
-              ? "button primary"
-              : "button secondary"
-          }
-          type="button"
-          disabled={
-            !isAddress(
-              platformAttestor,
-            )
-          }
-          onClick={() =>
-            setAttendanceMode(
-              "platform",
-            )
-          }
-        >
-          Platform-verified
-        </button>
-      </div>
-
-      <p className="formNote">
-        Manual check-in lets each participant
-        confirm directly and does not enforce
-        the duration policy. The platform-
-        verified demo uses the fixed
-        CommitPass attestor configured by the
-        deployment; providers cannot substitute
-        an arbitrary signer.
-      </p>
-
-      {attendanceMode === "platform" ? (
-        <div className="transactionStatus">
-          Demo attestor: {platformAttestor}
-        </div>
-      ) : !isAddress(platformAttestor) ? (
-        <p className="formNote">
-          Platform verification remains disabled
-          until the public demo attestor address
-          is configured.
-        </p>
-      ) : null}
-
-      <div className="fieldGrid">
-        <label>
-          Free cancellation lead
-          <div className="moneyInput">
-            <input
-              value={cancelHours}
-              onChange={(event) =>
-                setCancelHours(
-                  event.target.value,
-                )
-              }
-              inputMode="decimal"
-            />
-            <span>hours</span>
-          </div>
-          <small className="fieldHelp">
-            Must close at least 15 minutes
-            before the digital attendance
-            window opens. Longer sessions may
-            require a longer lead.
-          </small>
-        </label>
-
-        <label>
-          Reservation start
+          Date and time
           <input
             type="datetime-local"
             value={start}
@@ -618,7 +528,208 @@ export function CreateReservationForm() {
             required
           />
         </label>
+
+        <label>
+          Refundable deposit per person
+          <div className="moneyInput">
+            <input
+              value={commitmentAmount}
+              onChange={(event) =>
+                setCommitmentAmount(
+                  event.target.value,
+                )
+              }
+              inputMode="decimal"
+            />
+            <span>USDC</span>
+          </div>
+          <small className="fieldHelp">
+            Allowed range: 0.10-10,000 USDC.
+          </small>
+        </label>
       </div>
+
+      <label>How long is the session?</label>
+
+      <div className="createdActions">
+        {DURATION_PRESETS.map(
+          (duration) => (
+            <button
+              key={duration}
+              className={
+                Number(scheduledMinutes) ===
+                duration
+                  ? "button primary"
+                  : "button secondary"
+              }
+              type="button"
+              onClick={() =>
+                chooseDuration(duration)
+              }
+            >
+              {duration} min
+            </button>
+          ),
+        )}
+      </div>
+
+      <div className="transactionStatus">
+        <strong>
+          Simple rule
+        </strong>
+        <p>
+          The session is completed after both
+          participants share the verified session
+          for {completionThresholdMinutes} minutes.
+          A {issueWindowMinutes}-minute arrival
+          window is included.
+        </p>
+      </div>
+
+      <div className="fieldGrid">
+        <label>
+          Free cancellation
+          <div className="moneyInput">
+            <input
+              value={cancelHours}
+              onChange={(event) =>
+                setCancelHours(
+                  event.target.value,
+                )
+              }
+              inputMode="decimal"
+            />
+            <span>hours before</span>
+          </div>
+        </label>
+
+        <div className="transactionStatus">
+          <strong>
+            Attendance verification
+          </strong>
+          <p>
+            {attendanceMode === "platform"
+              ? "CommitPass verifies the agreed duration automatically."
+              : "Each participant confirms attendance manually."}
+          </p>
+        </div>
+      </div>
+
+      <details>
+        <summary>
+          Advanced settings
+        </summary>
+
+        <p className="formNote">
+          The recommended values above are designed
+          to keep the experience simple. Change these
+          only when both participants understand the
+          result.
+        </p>
+
+        <div className="fieldGrid">
+          <label>
+            Session duration
+            <div className="moneyInput">
+              <input
+                value={scheduledMinutes}
+                onChange={(event) =>
+                  setScheduledMinutes(
+                    event.target.value,
+                  )
+                }
+                inputMode="numeric"
+              />
+              <span>minutes</span>
+            </div>
+          </label>
+
+          <label>
+            Arrival window
+            <div className="moneyInput">
+              <input
+                value={issueWindowMinutes}
+                onChange={(event) =>
+                  setIssueWindowMinutes(
+                    event.target.value,
+                  )
+                }
+                inputMode="numeric"
+              />
+              <span>minutes</span>
+            </div>
+          </label>
+        </div>
+
+        <label>
+          Completion requirement
+          <div className="moneyInput">
+            <input
+              value={
+                completionThresholdMinutes
+              }
+              onChange={(event) =>
+                setCompletionThresholdMinutes(
+                  event.target.value,
+                )
+              }
+              inputMode="numeric"
+            />
+            <span>minutes together</span>
+          </div>
+        </label>
+
+        {!sessionPolicyValidation.valid ? (
+          <small className="metadataUnverified">
+            {sessionPolicyValidation.errors[0]}
+          </small>
+        ) : null}
+
+        <label>
+          Verification method
+        </label>
+
+        <div className="createdActions">
+          <button
+            className={
+              attendanceMode === "platform"
+                ? "button primary"
+                : "button secondary"
+            }
+            type="button"
+            disabled={
+              !platformVerificationAvailable
+            }
+            onClick={() =>
+              setAttendanceMode(
+                "platform",
+              )
+            }
+          >
+            Automatic
+          </button>
+
+          <button
+            className={
+              attendanceMode === "self"
+                ? "button primary"
+                : "button secondary"
+            }
+            type="button"
+            onClick={() =>
+              setAttendanceMode("self")
+            }
+          >
+            Manual fallback
+          </button>
+        </div>
+
+        <small className="fieldHelp">
+          Manual confirmation does not verify the
+          session duration. Automatic verification
+          is recommended whenever available.
+        </small>
+      </details>
 
       <SettlementPreview
         commitmentAmount={
@@ -632,13 +743,13 @@ export function CreateReservationForm() {
         disabled={!valid || busy}
       >
         {busy
-          ? "Creating..."
-          : "Lock provider commitment"}
+          ? "Creating invitation..."
+          : `Create invitation and lock ${commitmentAmount || "0"} USDC`}
       </button>
 
       <p className="formNote">
-        Two wallet confirmations are expected:
-        USDC approval and reservation creation.
+        Your wallet may ask for two confirmations:
+        token approval and the refundable deposit.
       </p>
 
       {created ? (
@@ -651,31 +762,24 @@ export function CreateReservationForm() {
                 .toString()}
             </strong>
             <p>
-              Attendance mode:{" "}
-              {created.attendanceMode ===
-              "platform"
-                ? "Platform-verified"
-                : "Manual check-in"}
-              .
+              Share the link below. The invited
+              participant reviews the same terms and
+              locks the same deposit.
             </p>
             {created.sessionPolicy ? (
               <p>
-                Digital session terms: {" "}
                 {created.sessionPolicy
                   .scheduledMinutes}
-                -minute session, {" "}
-                {created.sessionPolicy
-                  .issueWindowMinutes}
-                -minute issue window and {" "}
+                -minute session Â·{" "}
                 {created.sessionPolicy
                   .completionThresholdMinutes}
-                -minute completion threshold.
+                -minute verified completion Â·{" "}
+                {commitmentAmount} USDC each
               </p>
             ) : (
               <p>
-                No platform-enforced duration
-                policy is committed for manual
-                check-in.
+                Manual attendance confirmation Â·{" "}
+                {commitmentAmount} USDC each
               </p>
             )}
           </div>
@@ -685,19 +789,17 @@ export function CreateReservationForm() {
               className="button primary"
               href={created.shareUrl}
             >
-              Open reservation
+              Review invitation
             </a>
 
             <button
               className="button secondary"
               type="button"
-              onClick={
-                copyInvitation
-              }
+              onClick={copyInvitation}
             >
               {copied
                 ? "Link copied"
-                : "Copy invitation"}
+                : "Copy invitation link"}
             </button>
           </div>
 
@@ -710,8 +812,7 @@ export function CreateReservationForm() {
             target="_blank"
             rel="noreferrer"
           >
-            View creation transaction on
-            Arcscan
+            View creation transaction
           </a>
         </div>
       ) : null}
