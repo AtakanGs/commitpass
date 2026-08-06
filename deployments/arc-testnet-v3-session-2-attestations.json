@@ -1,0 +1,37 @@
+{
+  "network": "arc-testnet",
+  "chainId": "5042002",
+  "contractAddress": "0x66592bDB161b2C68ceFB4133Cfa0dB08eD2Ff791",
+  "reservationId": "2",
+  "attestor": "0x57c165889e936692cf4a4aE4b97f8daDDa0b8E01",
+  "receiptPath": "C:\\Users\\ataka\\Downloads\\commitpass-v0.1.0-repository\\commitpass-repository\\deployments\\arc-testnet-v3-session-2-controlled-receipt.json",
+  "receiptHash": "0xe4de23ba180317349f715816c3ec4452da20ff0e4258ce507b94fe6292274b8c",
+  "evaluation": {
+    "providerSeconds": 1800,
+    "customerSeconds": 1800,
+    "verifiedOverlapSeconds": 1800,
+    "completionThresholdSeconds": 1200,
+    "issueWindowSeconds": 300,
+    "code": "completed",
+    "final": true,
+    "attestProvider": true,
+    "attestCustomer": true,
+    "recommendedContractOutcome": "Completed",
+    "reason": "Both parties shared the authenticated session for at least the agreed completion threshold."
+  },
+  "attendanceDeadline": "1786050863",
+  "attestations": [
+    {
+      "role": "provider",
+      "participant": "0x329c253928e0727f31c7FfbdC83b143E55c36841",
+      "validUntil": "1786050816",
+      "signature": "0x8014be04af665358d5bdec03d05975cd48ff95b455708ff35c8321d4706b044b4a3feee382ac3ecd30328f8254229bfa886c6ae5ee606523d7ba1645df1d2a461c"
+    },
+    {
+      "role": "customer",
+      "participant": "0x2f149e3de871759F2AadC5a6185512b36730a37d",
+      "validUntil": "1786050816",
+      "signature": "0x9aae35dc50d8b9ac7ac0f1e6daf671e60fac87403b7cab5716b96607c8f26ac235e6eb810107fa3d3bb7c43b0de560899064520dd0a5f2bc19e5d40261f4001c1c"
+    }
+  ]
+}

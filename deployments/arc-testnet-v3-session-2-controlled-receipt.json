@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "reservationId": "2",
+  "chainId": 5042002,
+  "contractAddress": "0x66592bdb161b2c68cefb4133cfa0db08ed2ff791",
+  "provider": "0x329c253928e0727f31c7ffbdc83b143e55c36841",
+  "customer": "0x2f149e3de871759f2aadc5a6185512b36730a37d",
+  "sessionId": "controlled-arc-testnet-r2",
+  "sessionStart": 1786048763,
+  "generatedAt": 1786050573,
+  "policy": {
+    "version": 1,
+    "kind": "digital-session",
+    "scheduledMinutes": 30,
+    "issueWindowMinutes": 5,
+    "completionThresholdMinutes": 20
+  },
+  "providerIntervals": [
+    {
+      "joinedAt": 1786048763,
+      "leftAt": 1786050563
+    }
+  ],
+  "customerIntervals": [
+    {
+      "joinedAt": 1786048763,
+      "leftAt": 1786050563
+    }
+  ],
+  "evaluation": {
+    "code": "completed",
+    "providerSeconds": 1800,
+    "customerSeconds": 1800,
+    "verifiedOverlapSeconds": 1800,
+    "recommendedContractOutcome": "Completed",
+    "attestProvider": true,
+    "attestCustomer": true
+  },
+  "adapter": {
+    "type": "controlled-arc-testnet-session-adapter",
+    "productionEvidence": false,
+    "statement": "Synthetic deterministic intervals for an Arc Testnet integration proof; not a claim of real-world attendance."
+  }
+}
