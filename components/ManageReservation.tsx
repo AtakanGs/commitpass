@@ -38,6 +38,9 @@ import {
 import {
   verifyReservationMetadata,
 } from "@/lib/metadata";
+import type {
+  DigitalSessionPolicy,
+} from "@/lib/sessionPolicy";
 
 const ZERO_HASH =
   "0x0000000000000000000000000000000000000000000000000000000000000000";
@@ -87,6 +90,7 @@ type ManageReservationProps = {
   autoLoad?: boolean;
   reservationTitle?: string;
   reservationSalt?: string;
+  sessionPolicy?: DigitalSessionPolicy;
 };
 
 export function ManageReservation({
@@ -94,6 +98,7 @@ export function ManageReservation({
   autoLoad = false,
   reservationTitle,
   reservationSalt,
+  sessionPolicy,
 }: ManageReservationProps) {
   const [id, setId] =
     useState(initialId);
@@ -337,6 +342,7 @@ export function ManageReservation({
           reservationTitle,
           reservation.metadataHash,
           reservationSalt,
+          sessionPolicy,
         ),
     );
 
@@ -774,6 +780,43 @@ export function ManageReservation({
                 {metadataVerified
                   ? "Verified against the salted onchain metadata reference"
                   : "Shared label does not match the onchain metadata reference"}
+              </small>
+            </div>
+          ) : null}
+
+          {sessionPolicy ? (
+            <div className="reservationTitle">
+              <span>
+                Digital session policy
+              </span>
+
+              <h3>
+                {sessionPolicy.scheduledMinutes}
+                -minute authenticated session
+              </h3>
+
+              <p>
+                Issues may be reported during
+                the first {" "}
+                {sessionPolicy.issueWindowMinutes}
+                minutes. Completion requires at
+                least {" "}
+                {sessionPolicy
+                  .completionThresholdMinutes}
+                minutes of verified simultaneous
+                participation.
+              </p>
+
+              <small
+                className={
+                  metadataVerified
+                    ? "metadataVerified"
+                    : "metadataUnverified"
+                }
+              >
+                {metadataVerified
+                  ? "These session terms are committed by the salted onchain metadata hash"
+                  : "These shared session terms could not be verified against the onchain metadata hash"}
               </small>
             </div>
           ) : null}

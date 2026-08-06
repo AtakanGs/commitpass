@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   title:
     "Create reservation | CommitPass",
   description:
-    "Create a symmetric two-sided USDC reservation commitment on Arc.",
+    "Create a digitally verifiable two-sided USDC session commitment on Arc.",
 };
 
 export default function
@@ -40,9 +40,9 @@ CreateReservationPage() {
         <h1>Create a reservation.</h1>
 
         <p>
-          Define one equal commitment,
-          choose self-attested or
-          platform-verified attendance and
+          Define one equal commitment, set
+          measurable digital session terms,
+          choose the attendance trust mode and
           send the customer a verifiable
           invitation.
         </p>
@@ -65,9 +65,9 @@ CreateReservationPage() {
                 Set symmetric terms
               </strong>
               <p>
-                Choose the start time,
-                cancellation lead and equal
-                commitment amount.
+                Choose the start time, equal
+                commitment, issue window and
+                completion threshold.
               </p>
             </div>
           </div>
@@ -80,8 +80,8 @@ CreateReservationPage() {
               </strong>
               <p>
                 Use direct self check-in or
-                bind the reservation to a
-                platform attestor.
+                the fixed CommitPass testnet
+                attestor for platform events.
               </p>
             </div>
           </div>

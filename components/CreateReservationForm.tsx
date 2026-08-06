@@ -18,6 +18,13 @@ import {
 import {
   SettlementPreview,
 } from "@/components/SettlementPreview";
+import {
+  DEFAULT_DIGITAL_SESSION_POLICY,
+  attendanceGraceSeconds,
+  sessionPolicyQuery,
+  validateDigitalSessionPolicy,
+  type DigitalSessionPolicy,
+} from "@/lib/sessionPolicy";
 
 function defaultStart() {
   const date = new Date(
@@ -73,6 +80,7 @@ type CreatedReservation = {
   shareUrl: string;
   attendanceMode: AttendanceMode;
   attendanceAttestor: Address;
+  sessionPolicy?: DigitalSessionPolicy;
 };
 
 export function CreateReservationForm() {
@@ -94,9 +102,34 @@ export function CreateReservationForm() {
   ] = useState<AttendanceMode>("self");
 
   const [
-    attendanceAttestor,
-    setAttendanceAttestor,
-  ] = useState("");
+    scheduledMinutes,
+    setScheduledMinutes,
+  ] = useState(
+    String(
+      DEFAULT_DIGITAL_SESSION_POLICY
+        .scheduledMinutes,
+    ),
+  );
+
+  const [
+    issueWindowMinutes,
+    setIssueWindowMinutes,
+  ] = useState(
+    String(
+      DEFAULT_DIGITAL_SESSION_POLICY
+        .issueWindowMinutes,
+    ),
+  );
+
+  const [
+    completionThresholdMinutes,
+    setCompletionThresholdMinutes,
+  ] = useState(
+    String(
+      DEFAULT_DIGITAL_SESSION_POLICY
+        .completionThresholdMinutes,
+    ),
+  );
 
   const [start, setStart] =
     useState(defaultStart);
@@ -116,6 +149,42 @@ export function CreateReservationForm() {
   const [busy, setBusy] =
     useState(false);
 
+  const platformAttestor =
+    process.env
+      .NEXT_PUBLIC_COMMITPASS_DEMO_ATTESTOR_ADDRESS ??
+    "";
+
+  const sessionPolicy = useMemo(
+    () => ({
+      version: 1 as const,
+      kind: "digital-session" as const,
+      scheduledMinutes: Number(
+        scheduledMinutes,
+      ),
+      issueWindowMinutes: Number(
+        issueWindowMinutes,
+      ),
+      completionThresholdMinutes:
+        Number(
+          completionThresholdMinutes,
+        ),
+    }),
+    [
+      completionThresholdMinutes,
+      issueWindowMinutes,
+      scheduledMinutes,
+    ],
+  );
+
+  const sessionPolicyValidation =
+    useMemo(
+      () =>
+        validateDigitalSessionPolicy(
+          sessionPolicy,
+        ),
+      [sessionPolicy],
+    );
+
   const valid = useMemo(() => {
     const customerValid =
       isAddress(customer);
@@ -131,12 +200,22 @@ export function CreateReservationForm() {
       cancellationLeadHours *
         3_600_000;
 
+    const requiredCancellationLeadMinutes =
+      sessionPolicyValidation.valid
+        ? attendanceGraceSeconds(
+            sessionPolicy,
+          ) /
+            60 +
+          15
+        : Number.POSITIVE_INFINITY;
+
     const scheduleValid =
       Number.isFinite(startMs) &&
       Number.isFinite(
         cancellationLeadHours,
       ) &&
-      cancellationLeadHours >= 1 &&
+      cancellationLeadHours * 60 >=
+        requiredCancellationLeadMinutes &&
       cancellationDeadlineMs >=
         Date.now() + 15 * 60_000;
 
@@ -144,16 +223,16 @@ export function CreateReservationForm() {
       attendanceMode === "self" ||
       (
         isAddress(
-          attendanceAttestor,
+          platformAttestor,
         ) &&
         !sameAddress(
-          attendanceAttestor,
+          platformAttestor,
           zeroAddress,
         ) &&
         (
           !customerValid ||
           !sameAddress(
-            attendanceAttestor,
+            platformAttestor,
             customer,
           )
         )
@@ -166,14 +245,20 @@ export function CreateReservationForm() {
         commitmentAmount,
       ) &&
       scheduleValid &&
-      attestorValid
+      attestorValid &&
+      (
+        attendanceMode === "self" ||
+        sessionPolicyValidation.valid
+      )
     );
   }, [
-    attendanceAttestor,
     attendanceMode,
     cancelHours,
     commitmentAmount,
     customer,
+    platformAttestor,
+    sessionPolicy,
+    sessionPolicyValidation.valid,
     start,
     title,
   ]);
@@ -196,18 +281,29 @@ export function CreateReservationForm() {
     );
 
     try {
+      const committedSessionPolicy =
+        attendanceMode === "platform"
+          ? sessionPolicy
+          : undefined;
+
       const result =
         await createReservation({
           customer:
             customer as Address,
           attendanceMode,
-          attendanceAttestor,
+          attendanceAttestor:
+            attendanceMode ===
+            "platform"
+              ? platformAttestor
+              : undefined,
           commitmentAmount,
           startTime:
             new Date(start),
           freeCancellationHours:
             Number(cancelHours),
           title: title.trim(),
+          sessionPolicy:
+            committedSessionPolicy,
         });
 
       const params =
@@ -218,6 +314,20 @@ export function CreateReservationForm() {
           title: title.trim(),
           salt: result.metadataSalt,
         });
+
+      if (committedSessionPolicy) {
+        const policyQuery =
+          sessionPolicyQuery(
+            committedSessionPolicy,
+          );
+
+        for (const [key, value] of
+          Object.entries(
+            policyQuery,
+          )) {
+          params.set(key, value);
+        }
+      }
 
       const shareUrl =
         window.location.origin +
@@ -232,6 +342,8 @@ export function CreateReservationForm() {
         attendanceMode,
         attendanceAttestor:
           result.attendanceAttestor,
+        sessionPolicy:
+          committedSessionPolicy,
       });
 
       setStatus(
@@ -339,6 +451,74 @@ export function CreateReservationForm() {
         </small>
       </label>
 
+      <div className="fieldGrid">
+        <label>
+          Scheduled session
+          <div className="moneyInput">
+            <input
+              value={scheduledMinutes}
+              onChange={(event) =>
+                setScheduledMinutes(
+                  event.target.value,
+                )
+              }
+              inputMode="numeric"
+            />
+            <span>minutes</span>
+          </div>
+        </label>
+
+        <label>
+          Issue window
+          <div className="moneyInput">
+            <input
+              value={issueWindowMinutes}
+              onChange={(event) =>
+                setIssueWindowMinutes(
+                  event.target.value,
+                )
+              }
+              inputMode="numeric"
+            />
+            <span>minutes</span>
+          </div>
+        </label>
+      </div>
+
+      <label>
+        Completion threshold
+        <div className="moneyInput">
+          <input
+            value={
+              completionThresholdMinutes
+            }
+            onChange={(event) =>
+              setCompletionThresholdMinutes(
+                event.target.value,
+              )
+            }
+            inputMode="numeric"
+          />
+          <span>minutes</span>
+        </div>
+        <small className="fieldHelp">
+          The session completes only after
+          both parties share the authenticated
+          session for this long. The default
+          30-minute policy uses a 5-minute
+          issue window and a 20-minute
+          completion threshold. These terms
+          are committed and enforceable by the
+          attendance adapter only in platform-
+          verified mode.
+        </small>
+        {!sessionPolicyValidation.valid ? (
+          <small className="metadataUnverified">
+            {sessionPolicyValidation.errors[0]}
+          </small>
+        ) : null}
+      </label>
+
       <label>
         Attendance verification
       </label>
@@ -355,7 +535,7 @@ export function CreateReservationForm() {
             setAttendanceMode("self")
           }
         >
-          Self-attested
+          Manual check-in
         </button>
 
         <button
@@ -365,6 +545,11 @@ export function CreateReservationForm() {
               : "button secondary"
           }
           type="button"
+          disabled={
+            !isAddress(
+              platformAttestor,
+            )
+          }
           onClick={() =>
             setAttendanceMode(
               "platform",
@@ -376,33 +561,25 @@ export function CreateReservationForm() {
       </div>
 
       <p className="formNote">
-        Self-attested reservations let each
-        participant check in directly.
-        Platform-verified reservations require
-        a valid EIP-712 signature from the
-        configured platform signer.
+        Manual check-in lets each participant
+        confirm directly and does not enforce
+        the duration policy. The platform-
+        verified demo uses the fixed
+        CommitPass attestor configured by the
+        deployment; providers cannot substitute
+        an arbitrary signer.
       </p>
 
       {attendanceMode === "platform" ? (
-        <label>
-          Platform attestor wallet
-          <input
-            value={attendanceAttestor}
-            onChange={(event) =>
-              setAttendanceAttestor(
-                event.target.value,
-              )
-            }
-            placeholder="0x..."
-            spellCheck={false}
-            required
-          />
-          <small className="fieldHelp">
-            This address becomes immutable for
-            the reservation. It must differ
-            from provider, customer and arbiter.
-          </small>
-        </label>
+        <div className="transactionStatus">
+          Demo attestor: {platformAttestor}
+        </div>
+      ) : !isAddress(platformAttestor) ? (
+        <p className="formNote">
+          Platform verification remains disabled
+          until the public demo attestor address
+          is configured.
+        </p>
       ) : null}
 
       <div className="fieldGrid">
@@ -420,6 +597,12 @@ export function CreateReservationForm() {
             />
             <span>hours</span>
           </div>
+          <small className="fieldHelp">
+            Must close at least 15 minutes
+            before the digital attendance
+            window opens. Longer sessions may
+            require a longer lead.
+          </small>
         </label>
 
         <label>
@@ -472,9 +655,29 @@ export function CreateReservationForm() {
               {created.attendanceMode ===
               "platform"
                 ? "Platform-verified"
-                : "Self-attested"}
+                : "Manual check-in"}
               .
             </p>
+            {created.sessionPolicy ? (
+              <p>
+                Digital session terms: {" "}
+                {created.sessionPolicy
+                  .scheduledMinutes}
+                -minute session, {" "}
+                {created.sessionPolicy
+                  .issueWindowMinutes}
+                -minute issue window and {" "}
+                {created.sessionPolicy
+                  .completionThresholdMinutes}
+                -minute completion threshold.
+              </p>
+            ) : (
+              <p>
+                No platform-enforced duration
+                policy is committed for manual
+                check-in.
+              </p>
+            )}
           </div>
 
           <div className="createdActions">

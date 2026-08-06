@@ -25,6 +25,10 @@ import {
   createMetadataSalt,
   hashReservationMetadata,
 } from "@/lib/metadata";
+import {
+  attendanceGraceSeconds,
+  type DigitalSessionPolicy,
+} from "@/lib/sessionPolicy";
 import { connectWallet } from "@/lib/wallet";
 
 const arcPublicClient = createPublicClient({
@@ -35,7 +39,7 @@ const arcPublicClient = createPublicClient({
 const FINAL_V3_ADDRESS =
   "0x66592bDB161b2C68ceFB4133Cfa0dB08eD2Ff791";
 
-const GRACE_PERIOD = 15n * 60n;
+const DEFAULT_GRACE_PERIOD = 15n * 60n;
 const CLAIM_WINDOW = 24n * 60n * 60n;
 const DISPUTE_WINDOW = 24n * 60n * 60n;
 const ARBITER_WINDOW = 72n * 60n * 60n;
@@ -190,6 +194,7 @@ export async function createReservation(input: {
   startTime: Date;
   freeCancellationHours: number;
   title: string;
+  sessionPolicy?: DigitalSessionPolicy;
 }) {
   const commitmentAmount =
     usdc(input.commitmentAmount);
@@ -238,7 +243,16 @@ export async function createReservation(input: {
     hashReservationMetadata(
       input.title,
       metadataSalt,
+      input.sessionPolicy,
     );
+
+  const gracePeriod = input.sessionPolicy
+    ? BigInt(
+        attendanceGraceSeconds(
+          input.sessionPolicy,
+        ),
+      )
+    : DEFAULT_GRACE_PERIOD;
 
   await approveCommitment(
     commitmentAmount,
@@ -262,7 +276,7 @@ export async function createReservation(input: {
         commitmentAmount,
         startTime,
         cancellationDeadline,
-        GRACE_PERIOD,
+        gracePeriod,
         CLAIM_WINDOW,
         DISPUTE_WINDOW,
         ARBITER_WINDOW,

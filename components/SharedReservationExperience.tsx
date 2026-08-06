@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { ManageReservation } from "@/components/ManageReservation";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteNav } from "@/components/SiteNav";
+import { sessionPolicyFromQuery } from "@/lib/sessionPolicy";
 
 export function SharedReservationExperience() {
   const searchParams = useSearchParams();
@@ -22,6 +23,12 @@ export function SharedReservationExperience() {
     rawSalt && /^0x[0-9a-fA-F]{64}$/.test(rawSalt)
       ? rawSalt
       : undefined;
+
+  const sessionPolicy = sessionPolicyFromQuery({
+    duration: searchParams.get("duration"),
+    issue: searchParams.get("issue"),
+    threshold: searchParams.get("threshold"),
+  });
 
   return (
     <main className="sharedPage">
@@ -93,6 +100,7 @@ export function SharedReservationExperience() {
           autoLoad={Boolean(id)}
           reservationTitle={sharedTitle}
           reservationSalt={sharedSalt}
+          sessionPolicy={sessionPolicy}
         />
       </section>
 

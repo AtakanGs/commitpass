@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://commitpass.example/schemas/digital-session-receipt-v1.json",
+  "title": "CommitPass Digital Session Receipt V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "reservationId",
+    "chainId",
+    "contractAddress",
+    "provider",
+    "customer",
+    "sessionId",
+    "sessionStart",
+    "generatedAt",
+    "policy",
+    "providerIntervals",
+    "customerIntervals",
+    "evaluation"
+  ],
+  "properties": {
+    "version": { "const": 1 },
+    "reservationId": { "type": "string", "pattern": "^[1-9][0-9]*$" },
+    "chainId": { "type": "integer", "minimum": 1 },
+    "contractAddress": { "$ref": "#/$defs/address" },
+    "provider": { "$ref": "#/$defs/address" },
+    "customer": { "$ref": "#/$defs/address" },
+    "sessionId": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "sessionStart": { "type": "integer", "minimum": 1 },
+    "generatedAt": { "type": "integer", "minimum": 1 },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "scheduledMinutes",
+        "issueWindowMinutes",
+        "completionThresholdMinutes"
+      ],
+      "properties": {
+        "version": { "const": 1 },
+        "kind": { "const": "digital-session" },
+        "scheduledMinutes": { "type": "integer", "minimum": 15, "maximum": 90 },
+        "issueWindowMinutes": { "type": "integer", "minimum": 1 },
+        "completionThresholdMinutes": { "type": "integer", "minimum": 2 }
+      }
+    },
+    "providerIntervals": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/interval" }
+    },
+    "customerIntervals": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/interval" }
+    },
+    "evaluation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "providerSeconds",
+        "customerSeconds",
+        "verifiedOverlapSeconds",
+        "recommendedContractOutcome",
+        "attestProvider",
+        "attestCustomer"
+      ],
+      "properties": {
+        "code": {
+          "enum": [
+            "completed",
+            "customer-breach",
+            "provider-breach",
+            "customer-no-show",
+            "provider-no-show",
+            "manual-review"
+          ]
+        },
+        "providerSeconds": { "type": "integer", "minimum": 0 },
+        "customerSeconds": { "type": "integer", "minimum": 0 },
+        "verifiedOverlapSeconds": { "type": "integer", "minimum": 0 },
+        "recommendedContractOutcome": {
+          "enum": [
+            "Completed",
+            "CustomerNoShow",
+            "ProviderNoShow",
+            "RefundBoth"
+          ]
+        },
+        "attestProvider": { "type": "boolean" },
+        "attestCustomer": { "type": "boolean" }
+      }
+    }
+  },
+  "$defs": {
+    "address": {
+      "type": "string",
+      "pattern": "^0x[0-9a-fA-F]{40}$"
+    },
+    "interval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["joinedAt", "leftAt"],
+      "properties": {
+        "joinedAt": { "type": "integer", "minimum": 1 },
+        "leftAt": { "type": "integer", "minimum": 1 }
+      }
+    }
+  }
+}
