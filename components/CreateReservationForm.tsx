@@ -583,8 +583,9 @@ export function CreateReservationForm() {
         </strong>
         <p>
           The session is completed after both
-          participants share the verified session
-          for {completionThresholdMinutes} minutes.
+          participants are verified as present
+          together for at least
+          {" "}{completionThresholdMinutes} minutes.
           A {issueWindowMinutes}-minute arrival
           window is included.
         </p>

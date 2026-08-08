@@ -1202,3 +1202,98 @@ dl dd { margin:0; font-weight:700; }
   font-weight: 500;
   line-height: 1.5;
 }
+
+/* CommitPass final video polish */
+
+@media (min-width: 981px) {
+  .homeHero {
+    grid-template-columns:
+      minmax(0, .9fr)
+      minmax(540px, 1.1fr);
+    gap: 56px;
+    padding-block: 64px 78px;
+  }
+
+  .homeHeroCopy h1 {
+    max-width: 680px;
+    font-size: clamp(56px, 5.15vw, 74px);
+    line-height: 1.01;
+  }
+
+  .homeHero .lead {
+    max-width: 630px;
+    margin-top: 24px;
+    font-size: 18px;
+    line-height: 1.62;
+  }
+
+  .actionChooser {
+    padding: 38px;
+  }
+}
+
+.proofSection {
+  padding-top: 84px;
+}
+
+.proofSectionHead {
+  max-width: 880px;
+}
+
+.verifiedGrid {
+  gap: 24px;
+}
+
+.verifiedCard {
+  padding: 30px;
+}
+
+.verifiedGrid > .verifiedCard:last-child {
+  grid-column: 1 / -1;
+}
+
+.verifiedGrid >
+.verifiedCard:last-child
+.verifiedActions {
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.verifiedIdentity h3 {
+  font-size: 23px;
+  line-height: 1.2;
+}
+
+.verifiedSummary {
+  min-height: auto;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.verifiedState strong,
+.verifiedSettlement strong {
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.verifiedActions .button {
+  min-height: 44px;
+  font-size: 13px;
+}
+
+@media (max-width: 980px) {
+  .verifiedGrid >
+  .verifiedCard:last-child {
+    grid-column: auto;
+  }
+
+  .verifiedGrid >
+  .verifiedCard:last-child
+  .verifiedActions {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* End CommitPass final video polish */
