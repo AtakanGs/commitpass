@@ -589,9 +589,9 @@ export function LivePresenceRoom() {
                             .thresholdReached
                           ? status.sessionEnded
                             ? "Threshold reached"
-                            : "Threshold reached â€” waiting for session end"
+                            : "Threshold reached - waiting for session end"
                           : status.sessionEnded
-                            ? "Session ended â€” threshold not reached"
+                            ? "Session ended - threshold not reached"
                             : "Waiting for threshold"}
                   </dd>
                 </div>
