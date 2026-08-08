@@ -1137,6 +1137,47 @@ export function ManageReservation({
 
               <div className="reservationSummary">
                 <dl>
+                  <div>
+                    <dt>
+                      Attendance verifier
+                    </dt>
+                    <dd title={
+                      reservation
+                        .attendanceAttestor
+                    }>
+                      {compact(
+                        reservation
+                          .attendanceAttestor,
+                      )}
+                    </dd>
+                  </div>
+
+                  <div>
+                    <dt>
+                      Metadata commitment
+                    </dt>
+                    <dd title={
+                      reservation
+                        .metadataHash
+                    }>
+                      {compactHash(
+                        reservation
+                          .metadataHash,
+                      )}
+                    </dd>
+                  </div>
+
+                  {arbiter ? (
+                    <div>
+                      <dt>
+                        Arbiter
+                      </dt>
+                      <dd title={arbiter}>
+                        {compact(arbiter)}
+                      </dd>
+                    </div>
+                  ) : null}
+
                   {arbiterDeadline > 0 ? (
                     <div>
                       <dt>
