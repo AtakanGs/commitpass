@@ -37,6 +37,9 @@ type RoomStatus = {
   overlapSeconds: number;
   thresholdSeconds: number;
   thresholdReached: boolean;
+  sessionEnd: number;
+  sessionEnded: boolean;
+  readyToSettle: boolean;
   attendanceDeadline: number;
   settlement?: {
     providerTransaction?: Hex;
@@ -359,7 +362,7 @@ export function LivePresenceRoom() {
       !token ||
       role !== "provider" ||
       !status
-        ?.thresholdReached ||
+        ?.readyToSettle ||
       status.settlement ||
       settlementStarted.current
     ) {
@@ -581,9 +584,16 @@ export function LivePresenceRoom() {
                       .settlement
                       ? "Submitted onchain"
                       : status
-                          .thresholdReached
-                        ? "Threshold reached"
-                        : "Waiting for threshold"}
+                          .readyToSettle
+                        ? "Ready to settle"
+                        : status
+                            .thresholdReached
+                          ? status.sessionEnded
+                            ? "Threshold reached"
+                            : "Threshold reached — waiting for session end"
+                          : status.sessionEnded
+                            ? "Session ended — threshold not reached"
+                            : "Waiting for threshold"}
                   </dd>
                 </div>
               </dl>

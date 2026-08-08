@@ -477,6 +477,11 @@ export function roomStatus(
     room.policy
       .completionThresholdMinutes *
     60;
+  const sessionEnd =
+    room.startTime +
+    room.policy.scheduledMinutes * 60;
+  const sessionEnded =
+    now >= sessionEnd;
 
   const providerConnected =
     room.providerPresence
@@ -503,6 +508,11 @@ export function roomStatus(
     overlapSeconds,
     thresholdSeconds,
     thresholdReached:
+      overlapSeconds >= thresholdSeconds,
+    sessionEnd,
+    sessionEnded,
+    readyToSettle:
+      sessionEnded &&
       overlapSeconds >= thresholdSeconds,
     attendanceDeadline:
       room.attendanceDeadline,
@@ -880,6 +890,12 @@ async function settleRoom(
   if (!status.thresholdReached) {
     throw new Error(
       "The verified simultaneous-presence threshold has not been reached.",
+    );
+  }
+
+  if (!status.sessionEnded) {
+    throw new Error(
+      "The session is still in progress. CommitPass does not issue a final attendance attestation before the committed session ends.",
     );
   }
 
