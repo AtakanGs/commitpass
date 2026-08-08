@@ -34,8 +34,9 @@ import {
 import {
   verifyReservationMetadata,
 } from "@/lib/metadata";
-import type {
-  DigitalSessionPolicy,
+import {
+  sessionPolicyQuery,
+  type DigitalSessionPolicy,
 } from "@/lib/sessionPolicy";
 
 const ZERO_HASH =
@@ -564,7 +565,7 @@ export function ManageReservation({
       isPlatformVerified
     ) {
       actionHint =
-        "CommitPass will record verified attendance automatically. No manual signature is required.";
+        "This reservation uses a configured attendance verifier. No signature entry is required on this page.";
     } else if (
       isCheckInOpen
     ) {
@@ -638,6 +639,20 @@ export function ManageReservation({
         "salt",
         reservationSalt,
       );
+    }
+
+    if (sessionPolicy) {
+      const policyQuery =
+        sessionPolicyQuery(
+          sessionPolicy,
+        );
+
+      for (const [key, value] of
+        Object.entries(
+          policyQuery,
+        )) {
+        params.set(key, value);
+      }
     }
 
     return (
@@ -863,7 +878,7 @@ export function ManageReservation({
                 </dt>
                 <dd>
                   {isPlatformVerified
-                    ? "Automatic"
+                    ? "Configured verifier"
                     : "Manual"}
                 </dd>
               </div>
@@ -1143,19 +1158,18 @@ export function ManageReservation({
             <div className="roleBanner">
               <div className="roleBannerTop">
                 <span>
-                  Automatic attendance
+                  Verified attendance
                 </span>
                 <strong>
-                  No action needed
+                  Handled outside this page
                 </strong>
               </div>
 
               <p>
-                CommitPass records verified
-                participation through the configured
-                session service. Signatures and
-                settlement details stay in the
-                background.
+                This Arc Testnet reservation expects
+                signed attendance from its configured
+                verifier. No signature entry is
+                required on this page.
               </p>
             </div>
           ) : null}

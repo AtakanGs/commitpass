@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import {
   FormEvent,
@@ -609,7 +609,7 @@ export function CreateReservationForm() {
           </strong>
           <p>
             {attendanceMode === "platform"
-              ? "CommitPass verifies the agreed duration automatically."
+              ? "This reservation uses the configured attendance verifier."
               : "Each participant confirms attendance manually."}
           </p>
         </div>
