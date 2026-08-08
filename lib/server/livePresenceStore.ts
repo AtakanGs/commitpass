@@ -944,6 +944,18 @@ async function settleRoom(
     });
   const chainNow =
     block.timestamp;
+  const sessionEnd =
+    BigInt(
+      room.startTime +
+      room.policy.scheduledMinutes * 60,
+    );
+
+  if (chainNow < sessionEnd) {
+    throw new Error(
+      "Arc Testnet has not reached the committed session end yet. Final attendance is not issued early.",
+    );
+  }
+
   const deadline =
     BigInt(
       attendanceDeadline,
@@ -1071,17 +1083,10 @@ export async function settleForToken(
     );
   }
 
-  const role =
-    participantRole(
-      room,
-      payload.participant,
-    );
-
-  if (role !== "provider") {
-    throw new Error(
-      "The provider browser is the automatic settlement coordinator in this prototype.",
-    );
-  }
+  participantRole(
+    room,
+    payload.participant,
+  );
 
   if (!room.settling) {
     room.settling =

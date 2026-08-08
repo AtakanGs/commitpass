@@ -215,7 +215,7 @@ export function LivePresenceRoom() {
       const expiresAt =
         Math.floor(
           Date.now() / 1000,
-        ) + 60 * 60;
+        ) + 2 * 60 * 60;
       const nonce =
         crypto.randomUUID();
       const authorization =
@@ -360,7 +360,6 @@ export function LivePresenceRoom() {
   useEffect(() => {
     if (
       !token ||
-      role !== "provider" ||
       !status
         ?.readyToSettle ||
       status.settlement ||
@@ -372,7 +371,7 @@ export function LivePresenceRoom() {
     settlementStarted.current =
       true;
     setMessage(
-      "Presence threshold reached. Signing and relaying V3 attendance...",
+      "Presence threshold reached and session ended. Signing and relaying V3 attendance...",
     );
 
     void postJson<
@@ -590,9 +589,9 @@ export function LivePresenceRoom() {
                             .thresholdReached
                           ? status.sessionEnded
                             ? "Threshold reached"
-                            : "Threshold reached — waiting for session end"
+                            : "Threshold reached â€” waiting for session end"
                           : status.sessionEnded
-                            ? "Session ended — threshold not reached"
+                            ? "Session ended â€” threshold not reached"
                             : "Waiting for threshold"}
                   </dd>
                 </div>
