@@ -75,13 +75,12 @@ CreateReservationPage() {
             <span>02</span>
             <div>
               <strong>
-                Use verified attendance
+                Use the Arc Testnet verifier
               </strong>
               <p>
-                Verified-session mode uses the
-                configured testnet verifier.
-                Manual confirmation remains
-                available in advanced settings.
+                The demo verifier supports signed
+                attendance on V3. Manual confirmation
+                remains available in advanced settings.
               </p>
             </div>
           </div>

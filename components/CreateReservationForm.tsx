@@ -26,10 +26,14 @@ import {
   type DigitalSessionPolicy,
 } from "@/lib/sessionPolicy";
 
+const DEFAULT_PLATFORM_ATTESTOR =
+  "0x57c165889e936692cf4a4aE4b97f8daDDa0b8E01";
+
 const PLATFORM_ATTESTOR =
   process.env
-    .NEXT_PUBLIC_COMMITPASS_DEMO_ATTESTOR_ADDRESS ??
-  "";
+    .NEXT_PUBLIC_COMMITPASS_DEMO_ATTESTOR_ADDRESS
+    ?.trim() ||
+  DEFAULT_PLATFORM_ATTESTOR;
 
 const DURATION_PRESETS = [
   15,
@@ -609,7 +613,7 @@ export function CreateReservationForm() {
           </strong>
           <p>
             {attendanceMode === "platform"
-              ? "This reservation uses the configured attendance verifier."
+              ? "This reservation uses the configured Arc Testnet attendance verifier."
               : "Each participant confirms attendance manually."}
           </p>
         </div>
@@ -706,7 +710,7 @@ export function CreateReservationForm() {
               )
             }
           >
-            Automatic
+            Verified session (testnet)
           </button>
 
           <button
@@ -725,9 +729,10 @@ export function CreateReservationForm() {
         </div>
 
         <small className="fieldHelp">
-          Manual confirmation does not verify the
-          session duration. Automatic verification
-          is recommended whenever available.
+          The testnet verifier accepts signed
+          attendance produced by CommitPass demo
+          tooling. A production meeting-presence
+          service is not deployed yet.
         </small>
       </details>
 
@@ -770,15 +775,15 @@ export function CreateReservationForm() {
               <p>
                 {created.sessionPolicy
                   .scheduledMinutes}
-                -minute session Â·{" "}
+                -minute session /{" "}
                 {created.sessionPolicy
                   .completionThresholdMinutes}
-                -minute verified completion Â·{" "}
+                -minute verified completion /{" "}
                 {commitmentAmount} USDC each
               </p>
             ) : (
               <p>
-                Manual attendance confirmation Â·{" "}
+                Manual attendance confirmation /{" "}
                 {commitmentAmount} USDC each
               </p>
             )}
