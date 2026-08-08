@@ -321,6 +321,45 @@ export function ManageReservation({
         reservationSalt,
     );
 
+  const liveSessionPath =
+    canShareVerifiedInvitation &&
+    sessionPolicy
+      ? (() => {
+          const params =
+            new URLSearchParams();
+
+          params.set("id", id);
+          params.set(
+            "title",
+            reservationTitle ?? "",
+          );
+          params.set(
+            "salt",
+            reservationSalt ?? "",
+          );
+
+          const policyQuery =
+            sessionPolicyQuery(
+              sessionPolicy,
+            );
+
+          for (const [key, value] of
+            Object.entries(
+              policyQuery,
+            )) {
+            params.set(
+              key,
+              value,
+            );
+          }
+
+          return (
+            "/live-session?" +
+            params.toString()
+          );
+        })()
+      : undefined;
+
   const nowSeconds =
     Math.floor(now / 1000);
 
@@ -1195,6 +1234,15 @@ export function ManageReservation({
                 verifier. No signature entry is
                 required on this page.
               </p>
+
+              {liveSessionPath ? (
+                <a
+                  className="button primary"
+                  href={liveSessionPath}
+                >
+                  Open experimental live room
+                </a>
+              ) : null}
             </div>
           ) : null}
 

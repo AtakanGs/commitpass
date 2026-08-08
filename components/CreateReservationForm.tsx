@@ -140,6 +140,7 @@ type CreatedReservation = {
   hash: string;
   reservationId: bigint;
   shareUrl: string;
+  liveSessionUrl?: string;
   attendanceMode: AttendanceMode;
   attendanceAttestor: Address;
   sessionPolicy?: DigitalSessionPolicy;
@@ -416,11 +417,19 @@ export function CreateReservationForm() {
         "/reservation?" +
         params.toString();
 
+      const liveSessionUrl =
+        committedSessionPolicy
+          ? window.location.origin +
+            "/live-session?" +
+            params.toString()
+          : undefined;
+
       setCreated({
         hash: result.hash,
         reservationId:
           result.reservationId,
         shareUrl,
+        liveSessionUrl,
         attendanceMode,
         attendanceAttestor:
           result.attendanceAttestor,
@@ -807,6 +816,15 @@ export function CreateReservationForm() {
                 ? "Link copied"
                 : "Copy invitation link"}
             </button>
+
+            {created.liveSessionUrl ? (
+              <a
+                className="button secondary"
+                href={created.liveSessionUrl}
+              >
+                Experimental live room
+              </a>
+            ) : null}
           </div>
 
           <a
