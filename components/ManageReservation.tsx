@@ -314,6 +314,13 @@ export function ManageReservation({
   const invitationTermsVerified =
     metadataVerified;
 
+  const canShareVerifiedInvitation =
+    metadataVerified &&
+    Boolean(
+      reservationTitle &&
+        reservationSalt,
+    );
+
   const nowSeconds =
     Math.floor(now / 1000);
 
@@ -1011,56 +1018,7 @@ export function ManageReservation({
                 </div>
               ) : null}
 
-              {arbiterDeadline > 0 ? (
-                <div>
-                  <dt>
-                    Arbiter deadline
-                  </dt>
-                  <dd>
-                    {formatDate(
-                      arbiterDeadline,
-                    )}
-                  </dd>
-                </div>
-              ) : null}
 
-              {reservation
-                .claimEvidenceHash !==
-              ZERO_HASH ? (
-                <div>
-                  <dt>
-                    Claim evidence hash
-                  </dt>
-                  <dd title={
-                    reservation
-                      .claimEvidenceHash
-                  }>
-                    {compactHash(
-                      reservation
-                        .claimEvidenceHash,
-                    )}
-                  </dd>
-                </div>
-              ) : null}
-
-              {reservation
-                .disputeEvidenceHash !==
-              ZERO_HASH ? (
-                <div>
-                  <dt>
-                    Dispute evidence hash
-                  </dt>
-                  <dd title={
-                    reservation
-                      .disputeEvidenceHash
-                  }>
-                    {compactHash(
-                      reservation
-                        .disputeEvidenceHash,
-                    )}
-                  </dd>
-                </div>
-              ) : null}
             </dl>
 
             <SettlementPreview
@@ -1105,28 +1063,94 @@ export function ManageReservation({
               }
             />
 
-            <div className="shareActions">
-              {!autoLoad ? (
-                <a
+            {canShareVerifiedInvitation ? (
+              <div className="shareActions">
+                <button
                   className="button secondary"
-                  href={getSharePath()}
+                  type="button"
+                  onClick={
+                    copyShareLink
+                  }
                 >
-                  Open share page
-                </a>
-              ) : null}
+                  {copied
+                    ? "Invitation link copied"
+                    : "Copy verified invitation"}
+                </button>
+              </div>
+            ) : !autoLoad ? (
+              <div className="transactionStatus">
+                <strong>
+                  Invitation link unavailable from ID lookup
+                </strong>
+                <p>
+                  For safety, CommitPass does not rebuild an
+                  invitation from onchain state alone. Use the
+                  original verified invitation created with the
+                  reservation.
+                </p>
+              </div>
+            ) : null}
 
-              <button
-                className="button secondary"
-                type="button"
-                onClick={
-                  copyShareLink
-                }
-              >
-                {copied
-                  ? "Link copied"
-                  : "Copy link"}
-              </button>
-            </div>
+            <details>
+              <summary>
+                Technical details
+              </summary>
+
+              <div className="reservationSummary">
+                <dl>
+                  {arbiterDeadline > 0 ? (
+                    <div>
+                      <dt>
+                        Arbiter deadline
+                      </dt>
+                      <dd>
+                        {formatDate(
+                          arbiterDeadline,
+                        )}
+                      </dd>
+                    </div>
+                  ) : null}
+
+                  {reservation
+                    .claimEvidenceHash !==
+                  ZERO_HASH ? (
+                    <div>
+                      <dt>
+                        Claim evidence hash
+                      </dt>
+                      <dd title={
+                        reservation
+                          .claimEvidenceHash
+                      }>
+                        {compactHash(
+                          reservation
+                            .claimEvidenceHash,
+                        )}
+                      </dd>
+                    </div>
+                  ) : null}
+
+                  {reservation
+                    .disputeEvidenceHash !==
+                  ZERO_HASH ? (
+                    <div>
+                      <dt>
+                        Dispute evidence hash
+                      </dt>
+                      <dd title={
+                        reservation
+                          .disputeEvidenceHash
+                      }>
+                        {compactHash(
+                          reservation
+                            .disputeEvidenceHash,
+                        )}
+                      </dd>
+                    </div>
+                  ) : null}
+                </dl>
+              </div>
+            </details>
 
             <div className="checkinCode">
               <span>

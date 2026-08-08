@@ -40,10 +40,9 @@ CreateReservationPage() {
         <h1>Create a reservation.</h1>
 
         <p>
-          Define one equal commitment, set
-          measurable digital session terms,
-          choose the attendance trust mode and
-          send the customer a verifiable
+          Set the time, duration, refundable
+          commitment and cancellation deadline,
+          then send the customer a verifiable
           invitation.
         </p>
       </section>
@@ -62,12 +61,12 @@ CreateReservationPage() {
             <span>01</span>
             <div>
               <strong>
-                Set symmetric terms
+                Set clear session terms
               </strong>
               <p>
-                Choose the start time, equal
-                commitment, issue window and
-                completion threshold.
+                Choose the start time, duration,
+                equal refundable commitment and
+                cancellation deadline.
               </p>
             </div>
           </div>
@@ -76,12 +75,13 @@ CreateReservationPage() {
             <span>02</span>
             <div>
               <strong>
-                Choose attendance trust
+                Use verified attendance
               </strong>
               <p>
-                Use direct self check-in or
-                the fixed CommitPass testnet
-                attestor for platform events.
+                Verified-session mode uses the
+                configured testnet verifier.
+                Manual confirmation remains
+                available in advanced settings.
               </p>
             </div>
           </div>
