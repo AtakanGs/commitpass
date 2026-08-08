@@ -66,7 +66,7 @@ h3 { font-size:20px; }
 .formCard label { display:grid; gap:8px; margin-bottom:18px; font-size:13px; color:var(--muted); font-weight:700; }
 .formCard input { width:100%; border:1px solid var(--line); background:var(--soft); color:var(--ink); border-radius:12px; min-height:48px; padding:0 14px; outline:none; }
 .formCard input:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(22,105,237,.1); }
-.fieldGrid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.fieldGrid { display:grid; grid-template-columns:1fr 1fr; gap:14px; align-items:start; }
 .moneyInput { position:relative; }
 .moneyInput span { position:absolute; right:13px; top:14px; font-size:12px; font-weight:800; color:var(--muted); }
 .moneyInput input { padding-right:62px; }
@@ -1054,7 +1054,7 @@ dl dd { margin:0; font-weight:700; }
   }
 }
 
-/* CommitPass public proof page — simplified */
+/* CommitPass public proof page â€” simplified */
 
 .proofSection {
   padding-top: 110px;
@@ -1194,7 +1194,7 @@ dl dd { margin:0; font-weight:700; }
   }
 }
 
-/* End CommitPass public proof page — simplified */
+/* End CommitPass public proof page â€” simplified */
 
 .fieldHelp {
   color: var(--muted);
