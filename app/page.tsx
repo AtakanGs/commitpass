@@ -195,7 +195,7 @@ export default function Home() {
                 SIMPLE EXAMPLE
               </span>
               <h2>
-                10 USDC each.
+                Equal commitments.
                 <br />
                 One shared outcome.
               </h2>
@@ -208,7 +208,7 @@ export default function Home() {
           <div className="commitmentParties">
             <div>
               <span>Provider</span>
-              <strong>Locks 10 USDC</strong>
+              <strong>Locks the same amount</strong>
             </div>
 
             <div className="commitmentPlus">
@@ -217,7 +217,7 @@ export default function Home() {
 
             <div>
               <span>Customer</span>
-              <strong>Locks 10 USDC</strong>
+              <strong>Locks the same amount</strong>
             </div>
           </div>
 
@@ -240,7 +240,7 @@ export default function Home() {
             <div>
               <span>Both participate</span>
               <strong>
-                10 + 10 returned
+                Both commitments returned
               </strong>
             </div>
             <div>
@@ -258,9 +258,10 @@ export default function Home() {
           </div>
 
           <p className="commitmentNote">
-            The commitment is not the service
-            fee. It is symmetric reservation
-            protection.
+            The amount is chosen by the
+            participants. The commitment is not
+            the service fee; it is symmetric
+            reservation protection.
           </p>
         </div>
       </section>
