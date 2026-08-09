@@ -66,7 +66,7 @@ h3 { font-size:20px; }
 .formCard label { display:grid; gap:8px; margin-bottom:18px; font-size:13px; color:var(--muted); font-weight:700; }
 .formCard input { width:100%; border:1px solid var(--line); background:var(--soft); color:var(--ink); border-radius:12px; min-height:48px; padding:0 14px; outline:none; }
 .formCard input:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(22,105,237,.1); }
-.fieldGrid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.fieldGrid { display:grid; grid-template-columns:1fr 1fr; gap:14px; align-items:start; }
 .moneyInput { position:relative; }
 .moneyInput span { position:absolute; right:13px; top:14px; font-size:12px; font-weight:800; color:var(--muted); }
 .moneyInput input { padding-right:62px; }
@@ -840,7 +840,7 @@ dl dd { margin:0; font-weight:700; }
 
 .flowSteps {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 16px;
 }
 
@@ -1054,7 +1054,7 @@ dl dd { margin:0; font-weight:700; }
   }
 }
 
-/* CommitPass public proof page — simplified */
+/* CommitPass public proof page ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â simplified */
 
 .proofSection {
   padding-top: 110px;
@@ -1194,7 +1194,7 @@ dl dd { margin:0; font-weight:700; }
   }
 }
 
-/* End CommitPass public proof page — simplified */
+/* End CommitPass public proof page ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â simplified */
 
 .fieldHelp {
   color: var(--muted);
@@ -1297,3 +1297,108 @@ dl dd { margin:0; font-weight:700; }
 }
 
 /* End CommitPass final video polish */
+
+/* CommitPass recent reservations and cancellation UX */
+.formCard select {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 42px 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  outline: none;
+  background: var(--soft);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+}
+
+.formCard select:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(22,105,237,.1);
+}
+
+.recentReservations {
+  margin: 18px 0 24px;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(244,248,252,.78);
+}
+
+.recentReservations > summary {
+  cursor: pointer;
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.recentReservationsNote {
+  margin: 12px 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.recentReservationList {
+  display: grid;
+  gap: 10px;
+}
+
+.recentReservationItem {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: white;
+}
+
+.recentReservationItem > div:first-child {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.recentReservationItem span {
+  color: var(--blue);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.recentReservationItem strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 750 14px "Manrope", sans-serif;
+}
+
+.recentReservationItem small {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.recentReservationActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 7px;
+}
+
+.recentReservationActions .button {
+  min-height: 38px;
+  padding-inline: 12px;
+  font-size: 11px;
+}
+
+@media (max-width: 760px) {
+  .recentReservationItem {
+    grid-template-columns: 1fr;
+  }
+
+  .recentReservationActions {
+    justify-content: flex-start;
+  }
+}

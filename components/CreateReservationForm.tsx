@@ -19,6 +19,9 @@ import {
   SettlementPreview,
 } from "@/components/SettlementPreview";
 import {
+  saveRecentReservation,
+} from "@/lib/recentReservations";
+import {
   DEFAULT_DIGITAL_SESSION_POLICY,
   attendanceGraceSeconds,
   sessionPolicyQuery,
@@ -426,6 +429,19 @@ export function CreateReservationForm() {
           result.attendanceAttestor,
         sessionPolicy:
           committedSessionPolicy,
+      });
+
+      saveRecentReservation({
+        reservationId:
+          result.reservationId
+            .toString(),
+        title: title.trim(),
+        start,
+        createdAt:
+          new Date().toISOString(),
+        shareUrl,
+        hash: result.hash,
+        commitmentAmount,
       });
 
       setStatus(
