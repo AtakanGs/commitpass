@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "evidenceType": "real-google-meet-rest-api-participant-sessions",
+  "capturedAt": "2026-08-09T19:19:41.161Z",
+  "source": "Google Meet REST API",
+  "oauthScope": "https://www.googleapis.com/auth/meetings.space.readonly",
+  "meetingReference": {
+    "meetingCode": "redacted",
+    "meetingCodeSha256": "76410cdb6aee348c931d8e7a2760130033c2e6eddb282f902b9eacca132b0ea6",
+    "conferenceRecord": "conferenceRecords/3I_nhd2ScHQZi0Z09xcBDxIYOBEBMgUIigIgABgDCA",
+    "startTime": "2026-08-09T18:21:26.720001Z",
+    "endTime": "2026-08-09T18:25:16.827550Z"
+  },
+  "signedInParticipantCount": 2,
+  "participants": [
+    {
+      "label": "participant-1",
+      "identityType": "signed-in",
+      "googleUserSha256": "eb420f51e6df69b5d332b3f0f3ffe60abc923ff900afb35dffe11553aae0fbaa",
+      "displayNameSha256": "7c76814a2b2604f16e6bbe07e146ea4cea9d848569e9c55d368284ea824c8c5f",
+      "sessions": [
+        {
+          "startTime": "2026-08-09T18:22:54.167055Z",
+          "endTime": "2026-08-09T18:25:16.462575Z"
+        }
+      ]
+    },
+    {
+      "label": "participant-2",
+      "identityType": "signed-in",
+      "googleUserSha256": "6491c47832c4d045aa47e058527934ff2c2f3b6cc2049f9a6d40e08123d40a88",
+      "displayNameSha256": "cd8b85335eb0cff6f95a5ecf0d2efb08b651051e1bb16894eb674ed0ab14247c",
+      "sessions": [
+        {
+          "startTime": "2026-08-09T18:21:25.995710Z",
+          "endTime": "2026-08-09T18:25:04.300367Z"
+        }
+      ]
+    }
+  ],
+  "observedSimultaneousPresenceSeconds": 130,
+  "privacy": "Raw Google user resource IDs, display names and the meeting code are intentionally omitted from this committed proof.",
+  "integrationBoundary": {
+    "tiedToOnchainReservation": false,
+    "walletToGoogleIdentityBinding": "manual prototype only",
+    "googleMeetToArcE2ESettlementRun": false,
+    "statement": "This proves that CommitPass can read real signed-in Google Meet participant-session records. It does not claim that this specific Meet record produced an Arc settlement transaction."
+  }
+}

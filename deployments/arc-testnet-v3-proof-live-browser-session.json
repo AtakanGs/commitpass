@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "network": "Arc Testnet",
+  "chainId": 5042002,
+  "contract": "0x66592bDB161b2C68ceFB4133Cfa0dB08eD2Ff791",
+  "reservationId": "5",
+  "scenario": "wallet-authenticated-live-browser-presence",
+  "title": "Live presence demo",
+  "provider": "0x329c253928e0727f31c7FfbdC83b143E55c36841",
+  "customer": "0x9e0c85CbF38CE6394192F10B3Aff6A4d8dE25E96",
+  "attendanceAttestor": "0x57c165889e936692cf4a4aE4b97f8daDDa0b8E01",
+  "commitmentAmountBaseUnits": "100000",
+  "commitmentAmountUsdc": "0.10",
+  "metadataHash": "0x5d55c3d655522e4cc67b5ec47f0af7de6d5a1ed3a269ec70fbfafe8c14467d32",
+  "startTimeUnix": "1786294200",
+  "startTime": "2026-08-09T16:50:00.000Z",
+  "policy": {
+    "scheduledMinutes": 15,
+    "issueWindowMinutes": 3,
+    "completionThresholdMinutes": 10
+  },
+  "observedVerifierEvidence": {
+    "verifiedOverlapSeconds": 635,
+    "thresholdSeconds": 600,
+    "source": "server-timestamped wallet-authenticated browser heartbeats"
+  },
+  "onchainResult": {
+    "status": "Resolved",
+    "finalOutcome": "Completed",
+    "providerConfirmed": true,
+    "customerConfirmed": true
+  },
+  "transactions": {
+    "providerAttendance": {
+      "hash": "0xc4cb2832096dbe79321f5cfaa292980930d1f37c2e4b4cd9a7934f8b7e33db4c",
+      "participant": "0x329c253928e0727f31c7FfbdC83b143E55c36841",
+      "blockNumber": "56142987",
+      "blockTime": "2026-08-09T17:05:07.000Z"
+    },
+    "customerAttendance": {
+      "hash": "0xa2b181e740d8abc69d8b5bfc0d0e94b567bf138b643b21e0619e1460b18be640",
+      "participant": "0x9e0c85CbF38CE6394192F10B3Aff6A4d8dE25E96",
+      "blockNumber": "56142997",
+      "blockTime": "2026-08-09T17:05:12.000Z"
+    }
+  },
+  "evidenceBoundary": {
+    "productionEvidence": false,
+    "productionMeetingIntegrity": false,
+    "statement": "This proves a live wallet-authenticated browser-presence verifier settling CommitPass V3 on Arc Testnet. It is not a claim of Google Meet, Zoom, or production-grade meeting attendance."
+  }
+}
