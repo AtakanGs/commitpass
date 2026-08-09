@@ -5,21 +5,27 @@ import { SiteNav } from "@/components/SiteNav";
 const steps = [
   {
     number: "01",
-    title: "Agree on the session",
+    title: "Create the commitment",
     description:
-      "The provider sets the time, duration, cancellation deadline and one equal refundable USDC commitment for both sides.",
+      "The provider sets the session time, duration, cancellation deadline and one equal refundable USDC commitment for both sides.",
   },
   {
     number: "02",
-    title: "Both sides commit",
+    title: "Both sides lock the same amount",
     description:
-      "The provider funds first. The invited customer verifies the shared terms, accepts them and locks the same commitment.",
+      "The provider funds first. The invited customer verifies the committed terms, accepts them and locks the same refundable amount.",
   },
   {
     number: "03",
-    title: "Evidence drives settlement",
+    title: "Join the verified session",
     description:
-      "Verified-session mode accepts signed attendance from the configured verifier. Manual confirmation remains available as a fallback mode.",
+      "Each participant authorizes once with their wallet. The CommitPass verifier measures server-timestamped simultaneous presence against the committed session policy.",
+  },
+  {
+    number: "04",
+    title: "Evidence settles on Arc",
+    description:
+      "When the policy is satisfied, signed attendance evidence is submitted to V3 and the reservation outcome settles on Arc.",
   },
 ] as const;
 
@@ -128,7 +134,7 @@ export default function Home() {
         <div className="sectionHead compactSectionHead">
           <p className="eyebrow">HOW IT WORKS</p>
           <h2>
-            Shared terms in. Deterministic settlement out.
+            Commit together. Verify participation. Settle on Arc.
           </h2>
         </div>
 
