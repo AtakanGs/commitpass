@@ -7,130 +7,268 @@ const SCOPES = [
   "https://www.googleapis.com/auth/meetings.space.readonly",
 ];
 
-const CREDENTIALS_PATH = path.join(
+const SECRET_DIR = path.join(
   process.cwd(),
   ".secrets",
+);
+
+const CREDENTIALS_PATH = path.join(
+  SECRET_DIR,
   "google-meet-credentials.json",
 );
 
-if (!fs.existsSync(CREDENTIALS_PATH)) {
-  throw new Error(
-    "Missing .secrets/google-meet-credentials.json",
-  );
+const TOKEN_PATH = path.join(
+  SECRET_DIR,
+  "google-meet-token.json",
+);
+
+function normalizeMeetingCode(input = "") {
+  let value = input.trim().toLowerCase();
+
+  if (!value) {
+    return "";
+  }
+
+  try {
+    if (value.includes("://")) {
+      const url = new URL(value);
+      value =
+        url.pathname
+          .split("/")
+          .filter(Boolean)
+          .at(-1) || "";
+    }
+  } catch {
+    // Fall through to plain-text cleanup.
+  }
+
+  value = value
+    .split("?")[0]
+    .split("#")[0]
+    .trim();
+
+  if (
+    value &&
+    !/^[a-z]{3}-[a-z]{4}-[a-z]{3}$/.test(
+      value,
+    )
+  ) {
+    throw new Error(
+      "Meeting code must look like abc-defg-hij.",
+    );
+  }
+
+  return value;
 }
 
-const meetingCode = (process.argv[2] || "")
-  .trim()
-  .toLowerCase();
-
-const authClient = await authenticate({
-  scopes: SCOPES,
-  keyfilePath: CREDENTIALS_PATH,
-});
-
-async function meetGet(resourcePath, params = {}) {
+async function meetGet(
+  authClient,
+  resourcePath,
+  params = {},
+) {
   const url = new URL(
-    "https://meet.googleapis.com/v2/" + resourcePath,
+    "https://meet.googleapis.com/v2/" +
+      resourcePath,
   );
 
-  for (const [key, value] of Object.entries(params)) {
-    if (value !== undefined && value !== "") {
-      url.searchParams.set(key, String(value));
+  for (const [key, value] of
+    Object.entries(params)) {
+    if (
+      value !== undefined &&
+      value !== ""
+    ) {
+      url.searchParams.set(
+        key,
+        String(value),
+      );
     }
   }
 
-  const response = await authClient.request({
-    url: url.toString(),
-    method: "GET",
-  });
+  const response =
+    await authClient.request({
+      url: url.toString(),
+      method: "GET",
+    });
 
   return response.data;
 }
 
-const recordParams = {
-  pageSize: 10,
-};
+async function main() {
+  if (!fs.existsSync(CREDENTIALS_PATH)) {
+    throw new Error(
+      "Missing .secrets/google-meet-credentials.json",
+    );
+  }
 
-if (meetingCode) {
-  recordParams.filter =
-    `space.meeting_code = "${meetingCode}"`;
-}
-
-const recordsResponse = await meetGet(
-  "conferenceRecords",
-  recordParams,
-);
-
-const records =
-  recordsResponse.conferenceRecords || [];
-
-if (records.length === 0) {
-  console.log("");
-  console.log("Google Meet OAuth succeeded.");
-  console.log(
-    meetingCode
-      ? `No accessible conference record found for meeting code ${meetingCode}.`
-      : "No accessible conference records were returned for this account.",
-  );
-  console.log(
-    "Create or join a Meet with this Google account, end the call, then run the probe again.",
-  );
-  process.exit(0);
-}
-
-console.log("");
-console.log(
-  `Google Meet OAuth succeeded. Found ${records.length} accessible conference record(s).`,
-);
-
-for (const record of records.slice(0, 5)) {
-  const participantsResponse = await meetGet(
-    `${record.name}/participants`,
-    { pageSize: 250 },
-  );
-
-  const participants =
-    participantsResponse.participants || [];
-
-  console.log("");
-  console.log(`Conference: ${record.name}`);
-  console.log(`Space: ${record.space}`);
-  console.log(`Start: ${record.startTime || "-"}`);
-  console.log(`End: ${record.endTime || "ACTIVE"}`);
-  console.log(`Participants: ${participants.length}`);
-
-  for (const participant of participants) {
-    const sessionsResponse = await meetGet(
-      `${participant.name}/participantSessions`,
-      { pageSize: 250 },
+  const meetingCode =
+    normalizeMeetingCode(
+      process.argv[2] || "",
     );
 
-    const sessions =
-      sessionsResponse.participantSessions || [];
+  const authClient =
+    await authenticate({
+      scopes: SCOPES,
+      keyfilePath:
+        CREDENTIALS_PATH,
+    });
 
-    const identity =
-      participant.signedinUser?.displayName ||
-      participant.anonymousUser?.displayName ||
-      participant.phoneUser?.displayName ||
-      participant.name;
+  fs.mkdirSync(
+    SECRET_DIR,
+    { recursive: true },
+  );
 
-    const identityType =
-      participant.signedinUser
-        ? "signed-in"
-        : participant.anonymousUser
-          ? "anonymous"
-          : participant.phoneUser
-            ? "phone"
-            : "unknown";
+  fs.writeFileSync(
+    TOKEN_PATH,
+    JSON.stringify(
+      authClient.credentials,
+      null,
+      2,
+    ),
+    "utf8",
+  );
 
+  const recordParams = {
+    pageSize: 10,
+  };
+
+  if (meetingCode) {
+    recordParams.filter =
+      `space.meeting_code = "${meetingCode}"`;
+  }
+
+  const recordsResponse =
+    await meetGet(
+      authClient,
+      "conferenceRecords",
+      recordParams,
+    );
+
+  const records =
+    recordsResponse
+      .conferenceRecords || [];
+
+  records.sort(
+    (first, second) =>
+      Date.parse(
+        second.endTime ||
+          second.startTime ||
+          0,
+      ) -
+      Date.parse(
+        first.endTime ||
+          first.startTime ||
+          0,
+      ),
+  );
+
+  if (records.length === 0) {
+    console.log("");
     console.log(
-      `  - ${identity} [${identityType}] sessions=${sessions.length}`,
+      "Google Meet OAuth succeeded.",
+    );
+    console.log(
+      meetingCode
+        ? `No accessible conference record found for meeting code ${meetingCode}.`
+        : "No accessible conference records were returned for this account.",
+    );
+    process.exit(0);
+  }
+
+  console.log("");
+  console.log(
+    `Google Meet OAuth succeeded. Found ${records.length} accessible conference record(s).`,
+  );
+
+  for (const record of
+    records.slice(0, 5)) {
+    const participantsResponse =
+      await meetGet(
+        authClient,
+        `${record.name}/participants`,
+        { pageSize: 250 },
+      );
+
+    const participants =
+      participantsResponse
+        .participants || [];
+
+    console.log("");
+    console.log(
+      `Conference: ${record.name}`,
+    );
+    console.log(
+      `Space: ${record.space}`,
+    );
+    console.log(
+      `Start: ${record.startTime || "-"}`,
+    );
+    console.log(
+      `End: ${record.endTime || "ACTIVE"}`,
+    );
+    console.log(
+      `Participants: ${participants.length}`,
     );
 
-    for (const session of sessions) {
+    for (const participant of
+      participants) {
+      const sessionsResponse =
+        await meetGet(
+          authClient,
+          `${participant.name}/participantSessions`,
+          { pageSize: 250 },
+        );
+
+      const sessions =
+        sessionsResponse
+          .participantSessions || [];
+
+      const signedIn =
+        participant.signedinUser;
+      const identity =
+        signedIn?.displayName ||
+        participant
+          .anonymousUser?.displayName ||
+        participant
+          .phoneUser?.displayName ||
+        participant.name;
+
+      const identityType =
+        signedIn
+          ? "signed-in"
+          : participant.anonymousUser
+            ? "anonymous"
+            : participant.phoneUser
+              ? "phone"
+              : "unknown";
+
       console.log(
-        `      ${session.startTime || "-"} -> ${session.endTime || "ACTIVE"}`,
+        `- ${identity} [${identityType}] sessions=${sessions.length}`,
       );
+
+      if (signedIn?.user) {
+        console.log(
+          `  Google user: ${signedIn.user}`,
+        );
+      }
+
+      for (const session of sessions) {
+        console.log(
+          `  ${session.startTime || "-"} -> ${session.endTime || "ACTIVE"}`,
+        );
+      }
     }
   }
 }
+
+main().catch((caught) => {
+  const message =
+    caught instanceof Error
+      ? caught.message
+      : String(caught);
+
+  console.error(
+    "Google Meet probe failed: " +
+      message,
+  );
+  process.exitCode = 1;
+});

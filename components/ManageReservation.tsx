@@ -360,6 +360,14 @@ export function ManageReservation({
         })()
       : undefined;
 
+  const meetSessionPath =
+    liveSessionPath
+      ? liveSessionPath.replace(
+          "/live-session?",
+          "/meet-session?",
+        )
+      : undefined;
+
   const nowSeconds =
     Math.floor(now / 1000);
 
@@ -1276,14 +1284,25 @@ export function ManageReservation({
                 required on this page.
               </p>
 
-              {liveSessionPath ? (
-                <a
-                  className="button primary"
-                  href={liveSessionPath}
-                >
-                  Open experimental live room
-                </a>
-              ) : null}
+              <div className="createdActions">
+                {liveSessionPath ? (
+                  <a
+                    className="button secondary"
+                    href={liveSessionPath}
+                  >
+                    Open live presence adapter
+                  </a>
+                ) : null}
+
+                {meetSessionPath ? (
+                  <a
+                    className="button primary"
+                    href={meetSessionPath}
+                  >
+                    Verify with Google Meet
+                  </a>
+                ) : null}
+              </div>
             </div>
           ) : null}
 
