@@ -2,6 +2,7 @@
 
 import {
   FormEvent,
+  useEffect,
   useMemo,
   useState,
 } from "react";
@@ -42,6 +43,22 @@ const DURATION_PRESETS = [
   60,
   90,
 ] as const;
+
+const CANCELLATION_PRESETS = [
+  { minutes: 30, label: "30 minutes" },
+  { minutes: 45, label: "45 minutes" },
+  { minutes: 60, label: "1 hour" },
+  { minutes: 90, label: "90 minutes" },
+  { minutes: 120, label: "2 hours" },
+  { minutes: 360, label: "6 hours" },
+  { minutes: 720, label: "12 hours" },
+  { minutes: 1440, label: "24 hours" },
+  { minutes: 2880, label: "48 hours" },
+] as const;
+
+const RECENT_RESERVATIONS_KEY =
+  "commitpass:recent-reservations:v1";
+const MAX_RECENT_RESERVATIONS = 6;
 
 function defaultStart() {
   const date = new Date(
@@ -146,6 +163,82 @@ type CreatedReservation = {
   sessionPolicy?: DigitalSessionPolicy;
 };
 
+type RecentReservation = {
+  reservationId: string;
+  title: string;
+  start: string;
+  createdAt: string;
+  shareUrl: string;
+  liveSessionUrl?: string;
+  hash: string;
+  commitmentAmount: string;
+  cancellationMinutes: number;
+  sessionPolicy?: DigitalSessionPolicy;
+};
+
+function readRecentReservations(): RecentReservation[] {
+  if (typeof window === "undefined") {
+    return [];
+  }
+
+  try {
+    const raw =
+      window.localStorage.getItem(
+        RECENT_RESERVATIONS_KEY,
+      );
+
+    if (!raw) {
+      return [];
+    }
+
+    const parsed = JSON.parse(raw);
+
+    return Array.isArray(parsed)
+      ? parsed.slice(
+          0,
+          MAX_RECENT_RESERVATIONS,
+        )
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeRecentReservations(
+  reservations: RecentReservation[],
+) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(
+      RECENT_RESERVATIONS_KEY,
+      JSON.stringify(
+        reservations.slice(
+          0,
+          MAX_RECENT_RESERVATIONS,
+        ),
+      ),
+    );
+  } catch {
+    // Browser storage is a convenience only.
+  }
+}
+
+function formatLocalDate(value: string) {
+  const date = new Date(value);
+
+  if (!Number.isFinite(date.getTime())) {
+    return value;
+  }
+
+  return date.toLocaleString(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+}
+
 export function CreateReservationForm() {
   const platformVerificationAvailable =
     isAddress(PLATFORM_ATTESTOR) &&
@@ -208,8 +301,10 @@ export function CreateReservationForm() {
   const [start, setStart] =
     useState(defaultStart);
 
-  const [cancelHours, setCancelHours] =
-    useState("24");
+  const [
+    cancellationMinutes,
+    setCancellationMinutes,
+  ] = useState("1440");
 
   const [status, setStatus] =
     useState<string>();
@@ -222,6 +317,22 @@ export function CreateReservationForm() {
 
   const [busy, setBusy] =
     useState(false);
+
+  const [
+    recentReservations,
+    setRecentReservations,
+  ] = useState<RecentReservation[]>([]);
+
+  const [
+    copiedRecentId,
+    setCopiedRecentId,
+  ] = useState<string>();
+
+  useEffect(() => {
+    setRecentReservations(
+      readRecentReservations(),
+    );
+  }, []);
 
   const sessionPolicy = useMemo(
     () => ({
@@ -254,37 +365,49 @@ export function CreateReservationForm() {
       [sessionPolicy],
     );
 
+  const cancellationLeadMinutes =
+    Number(cancellationMinutes);
+
+  const requiredCancellationLeadMinutes =
+    attendanceMode === "platform" &&
+    sessionPolicyValidation.valid
+      ? attendanceGraceSeconds(
+          sessionPolicy,
+        ) /
+          60 +
+        15
+      : 30;
+
+  const startMs =
+    new Date(start).getTime();
+
+  const cancellationDeadlineMs =
+    startMs -
+    cancellationLeadMinutes *
+      60_000;
+
+  const cancellationDeadlineLabel =
+    Number.isFinite(
+      cancellationDeadlineMs,
+    )
+      ? new Date(
+          cancellationDeadlineMs,
+        ).toLocaleString(undefined, {
+          dateStyle: "medium",
+          timeStyle: "short",
+        })
+      : "-";
+
   const valid = useMemo(() => {
     const customerValid =
       isAddress(customer);
 
-    const cancellationLeadHours =
-      Number(cancelHours);
-
-    const startMs =
-      new Date(start).getTime();
-
-    const cancellationDeadlineMs =
-      startMs -
-      cancellationLeadHours *
-        3_600_000;
-
-    const requiredCancellationLeadMinutes =
-      attendanceMode === "platform" &&
-      sessionPolicyValidation.valid
-        ? attendanceGraceSeconds(
-            sessionPolicy,
-          ) /
-            60 +
-          15
-        : 30;
-
     const scheduleValid =
       Number.isFinite(startMs) &&
       Number.isFinite(
-        cancellationLeadHours,
+        cancellationLeadMinutes,
       ) &&
-      cancellationLeadHours * 60 >=
+      cancellationLeadMinutes >=
         requiredCancellationLeadMinutes &&
       cancellationDeadlineMs >=
         Date.now() + 15 * 60_000;
@@ -317,13 +440,14 @@ export function CreateReservationForm() {
     );
   }, [
     attendanceMode,
-    cancelHours,
+    cancellationDeadlineMs,
+    cancellationLeadMinutes,
     commitmentAmount,
     customer,
     platformVerificationAvailable,
-    sessionPolicy,
+    requiredCancellationLeadMinutes,
     sessionPolicyValidation.valid,
-    start,
+    startMs,
     title,
   ]);
 
@@ -383,7 +507,8 @@ export function CreateReservationForm() {
           startTime:
             new Date(start),
           freeCancellationHours:
-            Number(cancelHours),
+            cancellationLeadMinutes /
+            60,
           title: title.trim(),
           sessionPolicy:
             committedSessionPolicy,
@@ -437,6 +562,42 @@ export function CreateReservationForm() {
           committedSessionPolicy,
       });
 
+      const recentEntry: RecentReservation = {
+        reservationId:
+          result.reservationId.toString(),
+        title: title.trim(),
+        start,
+        createdAt:
+          new Date().toISOString(),
+        shareUrl,
+        liveSessionUrl,
+        hash: result.hash,
+        commitmentAmount,
+        cancellationMinutes:
+          cancellationLeadMinutes,
+        sessionPolicy:
+          committedSessionPolicy,
+      };
+
+      const nextRecent = [
+        recentEntry,
+        ...readRecentReservations().filter(
+          (entry) =>
+            entry.reservationId !==
+            recentEntry.reservationId,
+        ),
+      ].slice(
+        0,
+        MAX_RECENT_RESERVATIONS,
+      );
+
+      writeRecentReservations(
+        nextRecent,
+      );
+      setRecentReservations(
+        nextRecent,
+      );
+
       setStatus(
         "Invitation created. Share the link with the other participant.",
       );
@@ -472,6 +633,28 @@ export function CreateReservationForm() {
     }
   }
 
+  async function copyRecentInvitation(
+    reservation: RecentReservation,
+  ) {
+    try {
+      await navigator.clipboard.writeText(
+        reservation.shareUrl,
+      );
+
+      setCopiedRecentId(
+        reservation.reservationId,
+      );
+
+      window.setTimeout(() => {
+        setCopiedRecentId(undefined);
+      }, 1800);
+    } catch {
+      setStatus(
+        "The saved invitation link could not be copied automatically.",
+      );
+    }
+  }
+
   return (
     <form
       className="formCard card"
@@ -488,6 +671,86 @@ export function CreateReservationForm() {
         Choose the session details. Both parties
         lock the same refundable security deposit.
       </p>
+
+      {recentReservations.length > 0 ? (
+        <details className="recentReservations">
+          <summary>
+            Recent reservations on this device
+            {" "}({recentReservations.length})
+          </summary>
+
+          <p className="recentReservationsNote">
+            Verified invitation links are stored only
+            in this browser so you can return after a
+            refresh or restart. No private keys are
+            stored.
+          </p>
+
+          <div className="recentReservationList">
+            {recentReservations.map(
+              (reservation) => (
+                <div
+                  className="recentReservationItem"
+                  key={reservation.reservationId}
+                >
+                  <div>
+                    <span>
+                      Reservation #
+                      {reservation.reservationId}
+                    </span>
+                    <strong>
+                      {reservation.title}
+                    </strong>
+                    <small>
+                      {formatLocalDate(
+                        reservation.start,
+                      )}
+                      {" / "}
+                      {reservation.commitmentAmount}
+                      {" USDC each"}
+                    </small>
+                  </div>
+
+                  <div className="recentReservationActions">
+                    <a
+                      className="button secondary"
+                      href={reservation.shareUrl}
+                    >
+                      Open reservation
+                    </a>
+
+                    <button
+                      className="button secondary"
+                      type="button"
+                      onClick={() =>
+                        copyRecentInvitation(
+                          reservation,
+                        )
+                      }
+                    >
+                      {copiedRecentId ===
+                      reservation.reservationId
+                        ? "Link copied"
+                        : "Copy invitation"}
+                    </button>
+
+                    {reservation.liveSessionUrl ? (
+                      <a
+                        className="button secondary"
+                        href={
+                          reservation.liveSessionUrl
+                        }
+                      >
+                        Open live room
+                      </a>
+                    ) : null}
+                  </div>
+                </div>
+              ),
+            )}
+          </div>
+        </details>
+      ) : null}
 
       <label>
         What is the session for?
@@ -602,19 +865,45 @@ export function CreateReservationForm() {
 
       <div className="fieldGrid">
         <label>
-          Free cancellation
-          <div className="moneyInput">
-            <input
-              value={cancelHours}
-              onChange={(event) =>
-                setCancelHours(
-                  event.target.value,
-                )
-              }
-              inputMode="decimal"
-            />
-            <span>hours before</span>
-          </div>
+          Free cancellation before start
+          <select
+            value={cancellationMinutes}
+            onChange={(event) =>
+              setCancellationMinutes(
+                event.target.value,
+              )
+            }
+          >
+            {CANCELLATION_PRESETS.map(
+              (preset) => (
+                <option
+                  key={preset.minutes}
+                  value={preset.minutes}
+                >
+                  {preset.label}
+                </option>
+              ),
+            )}
+          </select>
+
+          {cancellationLeadMinutes <
+          requiredCancellationLeadMinutes ? (
+            <small className="metadataUnverified">
+              These session terms require at least
+              {" "}
+              {requiredCancellationLeadMinutes}
+              {" minutes of cancellation lead time."}
+            </small>
+          ) : (
+            <small className="fieldHelp">
+              Free cancellation until
+              {" "}
+              {cancellationDeadlineLabel}.
+              {" Minimum for these terms: "}
+              {requiredCancellationLeadMinutes}
+              {" minutes."}
+            </small>
+          )}
         </label>
 
         <div className="transactionStatus">
