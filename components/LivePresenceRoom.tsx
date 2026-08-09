@@ -57,6 +57,89 @@ type AuthResult = {
   status: RoomStatus;
 };
 
+type StoredPresenceSession = {
+  reservationId: string;
+  token: string;
+  role:
+    | "provider"
+    | "customer";
+};
+
+function presenceStorageKey(
+  reservationId: string,
+) {
+  return (
+    "commitpass:live-presence:" +
+    reservationId
+  );
+}
+
+function savePresenceSession(
+  session: StoredPresenceSession,
+) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.sessionStorage.setItem(
+    presenceStorageKey(
+      session.reservationId,
+    ),
+    JSON.stringify(session),
+  );
+}
+
+function readPresenceSession(
+  reservationId: string,
+): StoredPresenceSession | undefined {
+  if (
+    typeof window === "undefined" ||
+    !reservationId
+  ) {
+    return undefined;
+  }
+
+  const raw =
+    window.sessionStorage.getItem(
+      presenceStorageKey(
+        reservationId,
+      ),
+    );
+
+  if (!raw) {
+    return undefined;
+  }
+
+  try {
+    const parsed =
+      JSON.parse(raw) as
+        Partial<StoredPresenceSession>;
+
+    if (
+      parsed.reservationId !==
+        reservationId ||
+      typeof parsed.token !==
+        "string" ||
+      (
+        parsed.role !==
+          "provider" &&
+        parsed.role !==
+          "customer"
+      )
+    ) {
+      return undefined;
+    }
+
+    return {
+      reservationId,
+      token: parsed.token,
+      role: parsed.role,
+    };
+  } catch {
+    return undefined;
+  }
+}
+
 function formatClock(
   seconds: number,
 ) {
@@ -92,6 +175,10 @@ async function postJson<T>(
       },
       body:
         JSON.stringify(body),
+      cache: "no-store",
+      keepalive:
+        path ===
+        "/api/presence/heartbeat",
     });
 
   const payload =
@@ -149,6 +236,33 @@ export function LivePresenceRoom() {
       issue &&
       threshold,
     );
+
+  useEffect(() => {
+    if (
+      !reservationId ||
+      token
+    ) {
+      return;
+    }
+
+    const stored =
+      readPresenceSession(
+        reservationId,
+      );
+
+    if (!stored) {
+      return;
+    }
+
+    setToken(stored.token);
+    setRole(stored.role);
+    setMessage(
+      `${stored.role === "provider" ? "Provider" : "Customer"} presence authorization restored for this tab. Wallet connection is no longer required; keep this tab open.`,
+    );
+  }, [
+    reservationId,
+    token,
+  ]);
 
   const progress =
     useMemo(() => {
@@ -257,6 +371,12 @@ export function LivePresenceRoom() {
           },
         );
 
+      savePresenceSession({
+        reservationId,
+        token: result.token,
+        role: result.role,
+      });
+
       setToken(
         result.token,
       );
@@ -267,7 +387,7 @@ export function LivePresenceRoom() {
         result.status,
       );
       setMessage(
-        `${result.role === "provider" ? "Provider" : "Customer"} joined. Keep this tab open.`,
+        `${result.role === "provider" ? "Provider" : "Customer"} joined. You may switch or disconnect the wallet now; keep this tab open.`,
       );
     } catch (caught) {
       setMessage(
@@ -313,13 +433,46 @@ export function LivePresenceRoom() {
 
     void heartbeat();
 
+    const heartbeatNow = () => {
+      void heartbeat();
+    };
+
     const heartbeatTimer =
       window.setInterval(
-        () => {
-          void heartbeat();
-        },
-        5_000,
+        heartbeatNow,
+        4_000,
       );
+
+    const wakeHeartbeat = () => {
+      void heartbeat();
+    };
+
+    const visibilityHeartbeat =
+      () => {
+        if (
+          document.visibilityState ===
+          "visible"
+        ) {
+          void heartbeat();
+        }
+      };
+
+    window.addEventListener(
+      "focus",
+      wakeHeartbeat,
+    );
+    window.addEventListener(
+      "pageshow",
+      wakeHeartbeat,
+    );
+    window.addEventListener(
+      "online",
+      wakeHeartbeat,
+    );
+    document.addEventListener(
+      "visibilitychange",
+      visibilityHeartbeat,
+    );
 
     const statusTimer =
       window.setInterval(
@@ -350,6 +503,22 @@ export function LivePresenceRoom() {
       );
       window.clearInterval(
         statusTimer,
+      );
+      window.removeEventListener(
+        "focus",
+        wakeHeartbeat,
+      );
+      window.removeEventListener(
+        "pageshow",
+        wakeHeartbeat,
+      );
+      window.removeEventListener(
+        "online",
+        wakeHeartbeat,
+      );
+      document.removeEventListener(
+        "visibilitychange",
+        visibilityHeartbeat,
       );
     };
   }, [
@@ -416,8 +585,11 @@ export function LivePresenceRoom() {
         </h1>
         <p>
           Each participant authorizes this
-          browser once with their reservation
-          wallet. The local adapter records
+          browser tab once with their reservation
+          wallet. After authorization the wallet
+          may be switched or disconnected while
+          this tab keeps its own presence token.
+          The local adapter records
           server-timestamped heartbeats,
           measures simultaneous presence and
           sends signed V3 attendance after the
