@@ -66,11 +66,11 @@ type EvaluationResult = {
 };
 
 async function postJson<T>(
-  path: string,
+  route: string,
   body: unknown,
 ) {
   const response =
-    await fetch(path, {
+    await fetch(route, {
       method: "POST",
       headers: {
         "content-type":
@@ -135,6 +135,140 @@ function formatDate(
     : value;
 }
 
+function normalizedIntervals(
+  participant: MeetParticipant,
+) {
+  const intervals =
+    participant.sessions
+      .filter(
+        (
+          session,
+        ): session is {
+          startTime: string;
+          endTime: string;
+        } =>
+          Boolean(
+            session.startTime &&
+            session.endTime,
+          ),
+      )
+      .map((session) => ({
+        joinedAt:
+          Math.floor(
+            Date.parse(
+              session.startTime,
+            ) / 1000,
+          ),
+        leftAt:
+          Math.floor(
+            Date.parse(
+              session.endTime,
+            ) / 1000,
+          ),
+      }))
+      .filter(
+        (interval) =>
+          Number.isFinite(
+            interval.joinedAt,
+          ) &&
+          Number.isFinite(
+            interval.leftAt,
+          ) &&
+          interval.leftAt >
+            interval.joinedAt,
+      )
+      .sort(
+        (first, second) =>
+          first.joinedAt -
+          second.joinedAt,
+      );
+
+  const merged:
+    {
+      joinedAt: number;
+      leftAt: number;
+    }[] = [];
+
+  for (const interval of
+    intervals) {
+    const previous =
+      merged.at(-1);
+
+    if (
+      !previous ||
+      interval.joinedAt >
+        previous.leftAt
+    ) {
+      merged.push({
+        ...interval,
+      });
+    } else {
+      previous.leftAt =
+        Math.max(
+          previous.leftAt,
+          interval.leftAt,
+        );
+    }
+  }
+
+  return merged;
+}
+
+function observedOverlapSeconds(
+  first: MeetParticipant,
+  second: MeetParticipant,
+) {
+  const firstIntervals =
+    normalizedIntervals(first);
+  const secondIntervals =
+    normalizedIntervals(second);
+
+  let firstIndex = 0;
+  let secondIndex = 0;
+  let overlap = 0;
+
+  while (
+    firstIndex <
+      firstIntervals.length &&
+    secondIndex <
+      secondIntervals.length
+  ) {
+    const firstInterval =
+      firstIntervals[firstIndex];
+    const secondInterval =
+      secondIntervals[
+        secondIndex
+      ];
+
+    const start =
+      Math.max(
+        firstInterval.joinedAt,
+        secondInterval.joinedAt,
+      );
+    const end =
+      Math.min(
+        firstInterval.leftAt,
+        secondInterval.leftAt,
+      );
+
+    if (end > start) {
+      overlap +=
+        end - start;
+    }
+
+    if (
+      firstInterval.leftAt <=
+      secondInterval.leftAt
+    ) {
+      firstIndex += 1;
+    } else {
+      secondIndex += 1;
+    }
+  }
+
+  return overlap;
+}
+
 export function
 GoogleMeetEvidenceRoom() {
   const searchParams =
@@ -164,7 +298,10 @@ GoogleMeetEvidenceRoom() {
     );
 
   const [meetingCode, setMeetingCode] =
-    useState("");
+    useState(
+      searchParams.get("meeting") ||
+        "",
+    );
   const [evidence, setEvidence] =
     useState<MeetEvidence>();
   const [
@@ -196,6 +333,19 @@ GoogleMeetEvidenceRoom() {
               participant.userId,
           ) || [],
       [evidence],
+    );
+
+  const rawOverlap =
+    useMemo(
+      () =>
+        signedInParticipants.length ===
+        2
+          ? observedOverlapSeconds(
+              signedInParticipants[0],
+              signedInParticipants[1],
+            )
+          : undefined,
+      [signedInParticipants],
     );
 
   const requestBody = {
@@ -250,7 +400,9 @@ GoogleMeetEvidenceRoom() {
       }
 
       setMessage(
-        "Google Meet participant sessions loaded. Confirm the identity mapping before evaluation.",
+        termsReady
+          ? "Google Meet participant sessions loaded. Confirm the provider/customer mapping before policy evaluation."
+          : "Real Google Meet participant-session evidence loaded. Reservation evaluation is intentionally disabled in evidence-only mode.",
       );
     } catch (caught) {
       setEvidence(undefined);
@@ -365,31 +517,39 @@ GoogleMeetEvidenceRoom() {
         <p>
           CommitPass reads signed-in
           participant sessions from the
-          Google Meet API, evaluates their
-          verified overlap against the
-          committed session policy and can
-          relay V3 attendance after the
-          meeting has ended.
+          Google Meet REST API. A verified
+          reservation can then apply its
+          committed overlap policy before
+          V3 attendance is relayed.
         </p>
       </div>
 
       <div className="card formCard">
         <div className="formHeader">
           <span>
-            Reservation #
-            {reservationId || "-"}
+            {termsReady
+              ? `Reservation #${reservationId}`
+              : "Evidence-only mode"}
           </span>
           <span className="secureTag">
-            Google Meet + Arc
+            Google Meet REST API
           </span>
         </div>
 
         {!termsReady ? (
           <div className="transactionStatus">
-            Open this adapter from the
-            original verified reservation
-            link so the committed metadata
-            and policy are available.
+            <strong>
+              Safe evidence-only demo
+            </strong>
+            <p>
+              You can inspect a real completed
+              Google Meet record here without
+              claiming that it belongs to an
+              Arc reservation. Open this page
+              from a verified reservation link
+              to enable policy evaluation and
+              settlement.
+            </p>
           </div>
         ) : null}
 
@@ -412,7 +572,6 @@ GoogleMeetEvidenceRoom() {
           type="button"
           disabled={
             busy ||
-            !termsReady ||
             !meetingCode.trim()
           }
           onClick={loadEvidence}
@@ -427,17 +586,13 @@ GoogleMeetEvidenceRoom() {
             <div className="reservationSummary">
               <dl>
                 <div>
-                  <dt>
-                    Conference
-                  </dt>
+                  <dt>Conference</dt>
                   <dd>
                     {evidence.meetingCode}
                   </dd>
                 </div>
                 <div>
-                  <dt>
-                    Meet record
-                  </dt>
+                  <dt>Meet record</dt>
                   <dd>
                     {evidence.ended
                       ? "Ended"
@@ -446,8 +601,29 @@ GoogleMeetEvidenceRoom() {
                 </div>
                 <div>
                   <dt>
-                    Start
+                    Signed-in participants
                   </dt>
+                  <dd>
+                    {
+                      signedInParticipants.length
+                    }
+                  </dd>
+                </div>
+                {rawOverlap !==
+                undefined ? (
+                  <div>
+                    <dt>
+                      Observed simultaneous presence
+                    </dt>
+                    <dd>
+                      {formatSeconds(
+                        rawOverlap,
+                      )}
+                    </dd>
+                  </div>
+                ) : null}
+                <div>
+                  <dt>Start</dt>
                   <dd>
                     {formatDate(
                       evidence.startTime,
@@ -455,9 +631,7 @@ GoogleMeetEvidenceRoom() {
                   </dd>
                 </div>
                 <div>
-                  <dt>
-                    End
-                  </dt>
+                  <dt>End</dt>
                   <dd>
                     {formatDate(
                       evidence.endTime,
@@ -490,7 +664,9 @@ GoogleMeetEvidenceRoom() {
                           participant.sessions
                             .length
                         }
-                        {" Google Meet session(s)"}
+                        {
+                          " Google Meet session(s)"
+                        }
                       </small>
                     </div>
 
@@ -522,100 +698,117 @@ GoogleMeetEvidenceRoom() {
               )}
             </div>
 
-            <div className="fieldGrid">
-              <label>
-                Provider Google identity
-                <select
-                  value={
-                    providerGoogleUser
-                  }
-                  onChange={(event) =>
-                    setProviderGoogleUser(
-                      event.target.value,
-                    )
-                  }
-                >
-                  <option value="">
-                    Select provider
-                  </option>
-                  {signedInParticipants.map(
-                    (participant) => (
-                      <option
-                        key={
-                          participant.userId
-                        }
-                        value={
-                          participant.userId
-                        }
-                      >
-                        {
-                          participant.displayName
-                        }
+            {termsReady ? (
+              <>
+                <div className="fieldGrid">
+                  <label>
+                    Provider Google identity
+                    <select
+                      value={
+                        providerGoogleUser
+                      }
+                      onChange={(event) =>
+                        setProviderGoogleUser(
+                          event.target.value,
+                        )
+                      }
+                    >
+                      <option value="">
+                        Select provider
                       </option>
-                    ),
-                  )}
-                </select>
-              </label>
+                      {signedInParticipants.map(
+                        (participant) => (
+                          <option
+                            key={
+                              participant.userId
+                            }
+                            value={
+                              participant.userId
+                            }
+                          >
+                            {
+                              participant.displayName
+                            }
+                          </option>
+                        ),
+                      )}
+                    </select>
+                  </label>
 
-              <label>
-                Customer Google identity
-                <select
-                  value={
-                    customerGoogleUser
-                  }
-                  onChange={(event) =>
-                    setCustomerGoogleUser(
-                      event.target.value,
-                    )
-                  }
-                >
-                  <option value="">
-                    Select customer
-                  </option>
-                  {signedInParticipants.map(
-                    (participant) => (
-                      <option
-                        key={
-                          participant.userId
-                        }
-                        value={
-                          participant.userId
-                        }
-                      >
-                        {
-                          participant.displayName
-                        }
+                  <label>
+                    Customer Google identity
+                    <select
+                      value={
+                        customerGoogleUser
+                      }
+                      onChange={(event) =>
+                        setCustomerGoogleUser(
+                          event.target.value,
+                        )
+                      }
+                    >
+                      <option value="">
+                        Select customer
                       </option>
-                    ),
-                  )}
-                </select>
-              </label>
-            </div>
+                      {signedInParticipants.map(
+                        (participant) => (
+                          <option
+                            key={
+                              participant.userId
+                            }
+                            value={
+                              participant.userId
+                            }
+                          >
+                            {
+                              participant.displayName
+                            }
+                          </option>
+                        ),
+                      )}
+                    </select>
+                  </label>
+                </div>
 
-            <small className="fieldHelp">
-              Hackathon prototype boundary:
-              Google signed-in identities are
-              mapped to provider/customer
-              manually. Automatic wallet-to-
-              Google identity binding is not
-              implemented yet.
-            </small>
+                <small className="fieldHelp">
+                  Hackathon boundary: signed-in
+                  Google identities are mapped
+                  to provider/customer manually.
+                  Automatic wallet-to-Google
+                  identity binding is not
+                  implemented yet.
+                </small>
 
-            <div className="createdActions">
-              <button
-                className="button secondary"
-                type="button"
-                disabled={
-                  busy ||
-                  !canEvaluate
-                }
-                onClick={
-                  evaluateEvidence
-                }
-              >
-                Evaluate committed policy
-              </button>
-            </div>
+                <div className="createdActions">
+                  <button
+                    className="button secondary"
+                    type="button"
+                    disabled={
+                      busy ||
+                      !canEvaluate
+                    }
+                    onClick={
+                      evaluateEvidence
+                    }
+                  >
+                    Evaluate committed policy
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="transactionStatus">
+                <strong>
+                  Evidence loaded without an
+                  onchain claim
+                </strong>
+                <p>
+                  The record above is real Meet
+                  API evidence. No wallet mapping
+                  or Arc settlement is inferred
+                  in this mode.
+                </p>
+              </div>
+            )}
           </>
         ) : null}
 
@@ -722,12 +915,11 @@ GoogleMeetEvidenceRoom() {
         ) : null}
 
         <p className="formNote">
-          This local hackathon adapter
-          verifies Google Meet participant
-          records. The meeting code itself is
-          not yet committed onchain, and the
-          Google-to-wallet identity mapping is
-          still manual.
+          Local hackathon adapter. Google
+          participant records are real; the
+          meeting code is not committed
+          onchain and Google-to-wallet identity
+          binding remains a prototype boundary.
         </p>
       </div>
     </section>

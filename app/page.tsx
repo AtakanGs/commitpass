@@ -1,6 +1,11 @@
 import Link from "next/link";
-import { SiteFooter } from "@/components/SiteFooter";
-import { SiteNav } from "@/components/SiteNav";
+
+import {
+  SiteFooter,
+} from "@/components/SiteFooter";
+import {
+  SiteNav,
+} from "@/components/SiteNav";
 
 const steps = [
   {
@@ -17,15 +22,15 @@ const steps = [
   },
   {
     number: "03",
-    title: "Join the verified session",
+    title: "Verify participation",
     description:
-      "Each participant authorizes once with their wallet. The CommitPass verifier measures server-timestamped simultaneous presence against the committed session policy.",
+      "CommitPass can evaluate server-timestamped wallet-authenticated browser presence or signed-in participant-session records read from Google Meet.",
   },
   {
     number: "04",
     title: "Evidence settles on Arc",
     description:
-      "When the policy is satisfied, signed attendance evidence is submitted to V3 and the reservation outcome settles on Arc.",
+      "When committed policy conditions are satisfied, the configured verifier signs EIP-712 attendance and V3 settles the reservation on Arc.",
   },
 ] as const;
 
@@ -36,9 +41,14 @@ const proofPoints = [
       "Source-verified on Arc Testnet with symmetric commitments, bounded lifecycle windows and permissionless timeout recovery.",
   },
   {
-    title: "Verified-session path proven",
+    title: "Live verifier → Arc proven",
     description:
-      "A controlled integration proof submitted signed attendance for both parties and settled the reservation as Completed.",
+      "Reservation #5 used two wallet-authorized browser participants, reached 10:35 of verified simultaneous presence and settled V3 as Completed.",
+  },
+  {
+    title: "Real Google Meet records ingested",
+    description:
+      "The Meet REST adapter read two signed-in participants and their real join/leave sessions, measuring 02:10 of simultaneous presence in the completed test call.",
   },
   {
     title: "Failure recovery proven",
@@ -52,10 +62,14 @@ export default function Home() {
     <main>
       <SiteNav />
 
-      <section className="homeHero shell" id="top">
+      <section
+        className="homeHero shell"
+        id="top"
+      >
         <div className="homeHeroCopy">
           <p className="eyebrow">
-            TWO-SIDED COMMITMENTS FOR DIGITAL SESSIONS
+            TWO-SIDED COMMITMENTS FOR
+            DIGITAL SESSIONS
           </p>
 
           <h1>
@@ -65,22 +79,31 @@ export default function Home() {
           </h1>
 
           <p className="lead">
-            CommitPass protects online lessons, consultations and
-            other scarce sessions with equal refundable USDC
-            commitments on Arc. Honest participation returns both
-            commitments; a proven no-show can compensate the side
+            CommitPass protects online
+            lessons, consultations and other
+            scarce sessions with equal
+            refundable USDC commitments on
+            Arc. Honest participation returns
+            both commitments; a proven
+            no-show can compensate the side
             that kept the reservation.
           </p>
         </div>
 
         <div className="actionChooser card">
-          <p className="eyebrow">START A FLOW</p>
+          <p className="eyebrow">
+            START A FLOW
+          </p>
 
-          <h2>What do you need to do?</h2>
+          <h2>
+            What do you need to do?
+          </h2>
 
           <p className="chooserLead">
-            The interface shows only the actions relevant to the
-            connected wallet and current reservation state.
+            The interface shows only the
+            actions relevant to the connected
+            wallet and current reservation
+            state.
           </p>
 
           <div className="homeTaskGrid">
@@ -88,13 +111,21 @@ export default function Home() {
               className="homeTaskCard homeTaskPrimary"
               href="/create"
             >
-              <span className="taskRole">Provider</span>
-              <h3>Create a protected session</h3>
+              <span className="taskRole">
+                Provider
+              </span>
+              <h3>
+                Create a protected session
+              </h3>
               <p>
-                Set the terms, lock your refundable commitment and
-                send a verifiable invitation link.
+                Set the terms, lock your
+                refundable commitment and
+                send a verifiable invitation
+                link.
               </p>
-              <strong>Start provider flow</strong>
+              <strong>
+                Start provider flow
+              </strong>
             </Link>
 
             <Link
@@ -106,10 +137,14 @@ export default function Home() {
               </span>
               <h3>My reservations</h3>
               <p>
-                Return to reservations saved on this device, reopen
-                verified invitations and jump back into live rooms.
+                Return to reservations saved
+                on this device and reopen
+                their verified invitation
+                context.
               </p>
-              <strong>View reservations</strong>
+              <strong>
+                View reservations
+              </strong>
             </Link>
 
             <Link
@@ -119,31 +154,48 @@ export default function Home() {
               <span className="taskRole">
                 Customer or provider
               </span>
-              <h3>Open by onchain ID</h3>
+              <h3>
+                Open by onchain ID
+              </h3>
               <p>
-                Open the original invitation link to verify committed
-                terms, or inspect an existing reservation by its Arc ID.
+                Open the original invitation
+                link to verify committed terms,
+                or inspect an existing
+                reservation by Arc ID.
               </p>
-              <strong>Open reservation</strong>
+              <strong>
+                Open reservation
+              </strong>
             </Link>
           </div>
         </div>
       </section>
 
-      <section className="shell compactSection" id="how">
+      <section
+        className="shell compactSection"
+        id="how"
+      >
         <div className="sectionHead compactSectionHead">
-          <p className="eyebrow">HOW IT WORKS</p>
+          <p className="eyebrow">
+            HOW IT WORKS
+          </p>
           <h2>
-            Commit together. Verify participation. Settle on Arc.
+            Commit together. Verify
+            participation. Settle on Arc.
           </h2>
         </div>
 
         <div className="flowSteps">
           {steps.map((step) => (
-            <article className="flowStep" key={step.number}>
+            <article
+              className="flowStep"
+              key={step.number}
+            >
               <span>{step.number}</span>
               <h3>{step.title}</h3>
-              <p>{step.description}</p>
+              <p>
+                {step.description}
+              </p>
             </article>
           ))}
         </div>
@@ -151,38 +203,60 @@ export default function Home() {
 
       <section className="shell compactSection">
         <div className="sectionHead compactSectionHead">
-          <p className="eyebrow">WHAT IS PROVEN TODAY</p>
+          <p className="eyebrow">
+            WHAT IS PROVEN TODAY
+          </p>
           <h2>
-            The V3 settlement paths are public and inspectable.
+            Protocol and verifier boundaries
+            are inspectable.
           </h2>
         </div>
 
         <div className="flowSteps">
-          {proofPoints.map((point, index) => (
-            <article className="flowStep" key={point.title}>
-              <span>
-                {String(index + 1).padStart(2, "0")}
-              </span>
-              <h3>{point.title}</h3>
-              <p>{point.description}</p>
-            </article>
-          ))}
+          {proofPoints.map(
+            (point, index) => (
+              <article
+                className="flowStep"
+                key={point.title}
+              >
+                <span>
+                  {String(index + 1)
+                    .padStart(2, "0")}
+                </span>
+                <h3>
+                  {point.title}
+                </h3>
+                <p>
+                  {point.description}
+                </p>
+              </article>
+            ),
+          )}
         </div>
       </section>
 
       <section className="shell proofCta card">
         <div>
-          <p className="eyebrow">PUBLIC ARC TESTNET EVIDENCE</p>
-          <h2>Inspect the V3 transactions yourself.</h2>
+          <p className="eyebrow">
+            ARC + VERIFIER EVIDENCE
+          </p>
+          <h2>
+            Inspect what is proven and what
+            is still a prototype boundary.
+          </h2>
           <p>
-            The proof page links directly to the final contract,
-            completed verified-session transactions and a separate
-            permissionless stale-refund transaction.
+            The proof page separates public
+            Arc settlement transactions from
+            real Google Meet API evidence and
+            controlled integration evidence.
           </p>
         </div>
 
-        <Link className="button secondary" href="/proof">
-          View V3 proof
+        <Link
+          className="button secondary"
+          href="/proof"
+        >
+          View proof
         </Link>
       </section>
 

@@ -1,12 +1,22 @@
-import type { Metadata } from "next";
-import { SiteFooter } from "@/components/SiteFooter";
-import { SiteNav } from "@/components/SiteNav";
-import { VerifiedScenarios } from "@/components/VerifiedScenarios";
+import type {
+  Metadata,
+} from "next";
+
+import {
+  SiteFooter,
+} from "@/components/SiteFooter";
+import {
+  SiteNav,
+} from "@/components/SiteNav";
+import {
+  VerifiedScenarios,
+} from "@/components/VerifiedScenarios";
 
 export const metadata: Metadata = {
-  title: "Verified V3 testnet proof | CommitPass",
+  title:
+    "Protocol and verifier proof | CommitPass",
   description:
-    "Inspect public CommitPass V3 Arc Testnet transactions for a controlled verified-session settlement and permissionless stale-reservation recovery.",
+    "Inspect CommitPass V3 Arc Testnet settlements, live verifier evidence, real Google Meet API evidence and timeout recovery boundaries.",
 };
 
 export default function ProofPage() {

@@ -1299,7 +1299,7 @@ export function ManageReservation({
                     className="button primary"
                     href={meetSessionPath}
                   >
-                    Verify with Google Meet
+                    Verify with Google Meet (local)
                   </a>
                 ) : null}
               </div>

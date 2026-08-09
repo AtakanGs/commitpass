@@ -1,50 +1,55 @@
-# Experimental live presence adapter
+# Experimental live browser presence adapter
 
-This branch contains a deliberately narrow hackathon prototype that closes the missing link between a real browser session and the existing CommitPass V3 attendance-attestation boundary.
+This branch contains a narrow hackathon verifier that connects wallet-authenticated browser presence to the existing CommitPass V3 attendance-attestation boundary.
 
-## What it proves
+## Proven end-to-end result
 
-1. A participant opens a live room from the original verified invitation.
-2. The participant signs one wallet authorization message.
-3. A Node server validates:
-   - the participant is the provider or customer,
-   - the reservation is Active,
-   - the reservation uses the configured CommitPass testnet attestor,
-   - the title, salt and digital-session policy match the onchain metadata hash.
-4. The browser sends heartbeats every five seconds.
-5. The server timestamps heartbeats and builds provider/customer presence intervals.
-6. Simultaneous overlap is measured against the committed completion threshold.
-7. When the threshold is reached, the provider browser asks the server to settle.
-8. The server signs EIP-712 attendance for both participants with the configured V3 attestor and relays both calls to `confirmAttendanceWithAttestation`.
-9. V3 settles the reservation according to the existing contract logic.
+Reservation `#5` completed the full local path:
 
-## Important boundary
+1. Provider and customer each authorized once with their wallet.
+2. The server verified reservation participation and committed metadata.
+3. The browser targeted a heartbeat every 4 seconds.
+4. The server built timestamped presence intervals.
+5. Simultaneous overlap reached `10:35` against a `10:00` threshold.
+6. The adapter waited until the committed session end.
+7. The configured attestor signed EIP-712 attendance.
+8. The relayer submitted attendance for both participants.
+9. V3 settled the reservation as `Completed`.
 
-This is **not** a production Zoom/Meet/WebRTC attendance service.
+Structured evidence:
 
-The prototype intentionally uses:
+`deployments/arc-testnet-v3-proof-live-browser-session.json`
+
+## Continuity behavior
+
+The server treats a participant as continuously present only while heartbeat gaps remain within 45 seconds. A longer gap creates a new interval and the gap does not count toward simultaneous presence.
+
+During the live browser test, background-tab throttling caused verified overlap to lag wall-clock time. Keeping both tabs visible restored reliable heartbeat delivery. This is an important prototype limitation and one reason a production integration should prefer authoritative meeting-provider events.
+
+## Security boundary
+
+This is **not** production Zoom/Meet/WebRTC attendance infrastructure.
+
+It intentionally uses:
 
 - one Node process,
 - in-memory room state,
-- wallet authorization as participant identity,
+- wallet authorization as browser participant identity,
 - browser heartbeats as presence evidence,
-- a local/private testnet attestor key,
-- a local/private testnet relayer key.
+- local/private testnet attestor and relayer keys.
 
-This is sufficient to demonstrate the end-to-end adapter boundary without pretending the prototype solves production-grade meeting integrity, distributed state, anti-bot checks, device attestation or managed key custody.
+It does not claim to solve managed key custody, durable distributed state, anti-bot checks, device attestation or meeting-provider integrity.
 
 ## Local run
 
-The branch switches Next.js from static export to normal server mode because `/api/presence/*` requires server execution.
-
-Required local secrets:
+Required server-side secrets:
 
 ```text
 PLATFORM_ATTESTOR_PRIVATE_KEY=0x...
 PRESENCE_RELAYER_PRIVATE_KEY=0x...
 ```
 
-`PRESENCE_RELAYER_PRIVATE_KEY` may be omitted when `DEPLOYER_PRIVATE_KEY` is already configured.
+`PRESENCE_RELAYER_PRIVATE_KEY` may be omitted when `DEPLOYER_PRIVATE_KEY` is configured.
 
 Optional:
 
@@ -52,35 +57,24 @@ Optional:
 COMMITPASS_PRESENCE_SESSION_SECRET=long-random-secret
 ```
 
-If omitted, the local prototype derives its HMAC token secret from the attestor private key. Production systems should use a separate managed secret.
-
 Run:
 
 ```bash
 npm run dev
 ```
 
-Create a platform-verified reservation, let the customer accept it, then open the **Experimental live room** action from the reservation page in both participant browsers.
+Create a platform-verified reservation, let the invited customer accept it, then open **Live presence adapter** from the verified reservation.
 
-For a fast demo, Advanced settings may use:
+## Production migration
 
-- duration: 15 minutes
-- arrival window: 1 minute
-- completion requirement: 2 minutes
+Replace browser heartbeat evidence with an authoritative provider adapter or first-party session backend, plus:
 
-The V3 contract still enforces its normal attendance window and the reservation still commits those policy values in metadata.
-
-## Production migration path
-
-Replace the in-memory adapter with:
-
-- authenticated Zoom/Meet/Teams/WebRTC event ingestion,
-- durable session-event storage,
+- durable event storage,
 - replay-resistant internal event IDs,
 - managed signer/HSM,
-- rate limiting,
-- auditable settlement logs,
-- multi-instance locking/idempotency,
-- privacy and retention controls.
+- rate limits,
+- settlement idempotency/locking,
+- privacy/retention controls,
+- external identity binding.
 
 The V3 contract interface does not need to change.
