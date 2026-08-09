@@ -13,7 +13,8 @@ export function SiteFooter() {
 
       <div className="footerLinks">
         <Link href="/create">Create reservation</Link>
-        <Link href="/reservation">Open reservation</Link>
+        <Link href="/reservations">My reservations</Link>
+        <Link href="/reservation">Open by ID</Link>
         <Link href="/proof">Verified proof</Link>
         <a
           href="https://github.com/AtakanGs/commitpass"

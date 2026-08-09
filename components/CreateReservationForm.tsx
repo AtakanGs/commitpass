@@ -2,7 +2,6 @@
 
 import {
   FormEvent,
-  useEffect,
   useMemo,
   useState,
 } from "react";
@@ -226,18 +225,6 @@ function writeRecentReservations(
   }
 }
 
-function formatLocalDate(value: string) {
-  const date = new Date(value);
-
-  if (!Number.isFinite(date.getTime())) {
-    return value;
-  }
-
-  return date.toLocaleString(undefined, {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
-}
 
 export function CreateReservationForm() {
   const platformVerificationAvailable =
@@ -318,21 +305,6 @@ export function CreateReservationForm() {
   const [busy, setBusy] =
     useState(false);
 
-  const [
-    recentReservations,
-    setRecentReservations,
-  ] = useState<RecentReservation[]>([]);
-
-  const [
-    copiedRecentId,
-    setCopiedRecentId,
-  ] = useState<string>();
-
-  useEffect(() => {
-    setRecentReservations(
-      readRecentReservations(),
-    );
-  }, []);
 
   const sessionPolicy = useMemo(
     () => ({
@@ -594,9 +566,6 @@ export function CreateReservationForm() {
       writeRecentReservations(
         nextRecent,
       );
-      setRecentReservations(
-        nextRecent,
-      );
 
       setStatus(
         "Invitation created. Share the link with the other participant.",
@@ -633,27 +602,6 @@ export function CreateReservationForm() {
     }
   }
 
-  async function copyRecentInvitation(
-    reservation: RecentReservation,
-  ) {
-    try {
-      await navigator.clipboard.writeText(
-        reservation.shareUrl,
-      );
-
-      setCopiedRecentId(
-        reservation.reservationId,
-      );
-
-      window.setTimeout(() => {
-        setCopiedRecentId(undefined);
-      }, 1800);
-    } catch {
-      setStatus(
-        "The saved invitation link could not be copied automatically.",
-      );
-    }
-  }
 
   return (
     <form
@@ -671,86 +619,6 @@ export function CreateReservationForm() {
         Choose the session details. Both parties
         lock the same refundable security deposit.
       </p>
-
-      {recentReservations.length > 0 ? (
-        <details className="recentReservations">
-          <summary>
-            Recent reservations on this device
-            {" "}({recentReservations.length})
-          </summary>
-
-          <p className="recentReservationsNote">
-            Verified invitation links are stored only
-            in this browser so you can return after a
-            refresh or restart. No private keys are
-            stored.
-          </p>
-
-          <div className="recentReservationList">
-            {recentReservations.map(
-              (reservation) => (
-                <div
-                  className="recentReservationItem"
-                  key={reservation.reservationId}
-                >
-                  <div>
-                    <span>
-                      Reservation #
-                      {reservation.reservationId}
-                    </span>
-                    <strong>
-                      {reservation.title}
-                    </strong>
-                    <small>
-                      {formatLocalDate(
-                        reservation.start,
-                      )}
-                      {" / "}
-                      {reservation.commitmentAmount}
-                      {" USDC each"}
-                    </small>
-                  </div>
-
-                  <div className="recentReservationActions">
-                    <a
-                      className="button secondary"
-                      href={reservation.shareUrl}
-                    >
-                      Open reservation
-                    </a>
-
-                    <button
-                      className="button secondary"
-                      type="button"
-                      onClick={() =>
-                        copyRecentInvitation(
-                          reservation,
-                        )
-                      }
-                    >
-                      {copiedRecentId ===
-                      reservation.reservationId
-                        ? "Link copied"
-                        : "Copy invitation"}
-                    </button>
-
-                    {reservation.liveSessionUrl ? (
-                      <a
-                        className="button secondary"
-                        href={
-                          reservation.liveSessionUrl
-                        }
-                      >
-                        Open live room
-                      </a>
-                    ) : null}
-                  </div>
-                </div>
-              ),
-            )}
-          </div>
-        </details>
-      ) : null}
 
       <label>
         What is the session for?

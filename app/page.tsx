@@ -93,16 +93,30 @@ export default function Home() {
 
             <Link
               className="homeTaskCard"
+              href="/reservations"
+            >
+              <span className="taskRole">
+                Returning participant
+              </span>
+              <h3>My reservations</h3>
+              <p>
+                Return to reservations saved on this device, reopen
+                verified invitations and jump back into live rooms.
+              </p>
+              <strong>View reservations</strong>
+            </Link>
+
+            <Link
+              className="homeTaskCard"
               href="/reservation"
             >
               <span className="taskRole">
                 Customer or provider
               </span>
-              <h3>Open a reservation</h3>
+              <h3>Open by onchain ID</h3>
               <p>
-                Open the original invitation link to verify the
-                committed terms, or inspect an existing reservation
-                by its onchain ID.
+                Open the original invitation link to verify committed
+                terms, or inspect an existing reservation by its Arc ID.
               </p>
               <strong>Open reservation</strong>
             </Link>

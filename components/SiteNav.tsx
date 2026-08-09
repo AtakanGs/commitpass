@@ -16,6 +16,7 @@ export function SiteNav() {
       <div className="navLinks">
         <Link href="/#how">How it works</Link>
         <Link href="/proof">Verified proof</Link>
+        <Link href="/reservations">My reservations</Link>
         <Link href="/create">Create reservation</Link>
       </div>
 
